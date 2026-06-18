@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Booking Confirmed — MovieVerse</title>
+  <link rel="stylesheet" href="../css/global.css"/>
+  <style>
+    .success-page { min-height: calc(100vh - 70px); display: flex; align-items: center; justify-content: center; padding: var(--space-xl); }
+    .success-wrapper { width: 100%; max-width: 680px; }
+
+    /* Checkmark animation */
+    .success-icon-wrapper { display: flex; justify-content: center; margin-bottom: var(--space-xl); }
+    .success-circle {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: rgba(34,197,94,0.1);
+      border: 2px solid var(--success);
+      display: flex; align-items: center; justify-content: center;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .success-check { font-size: 48px; animation: bounceIn 0.6s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+    @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes bounceIn { from { transform: scale(0) rotate(-20deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+
+    .success-title { font-family: var(--font-display); font-size: clamp(36px, 5vw, 56px); letter-spacing: 1px; text-align: center; margin-bottom: var(--space-sm); }
+    .success-title span { color: var(--success); }
+    .success-subtitle { text-align: center; font-size: 15px; color: var(--text-secondary); margin-bottom: var(--space-2xl); line-height: 1.6; }
+
+    /* Ticket */
+    .ticket {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: var(--space-xl);
+      position: relative;
+      animation: slideUp 0.5s ease 0.2s both;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    .ticket-header {
+      background: linear-gradient(135deg, var(--accent) 0%, #8b0000 100%);
+      padding: var(--space-xl);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .ticket-movie-title { font-family: var(--font-display); font-size: 28px; letter-spacing: 1px; color: white; }
+    .ticket-movie-meta { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 4px; }
+    .ticket-id { font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.6); text-align: right; }
+    .ticket-id strong { display: block; font-size: 16px; color: white; letter-spacing: 1px; }
+
+    /* Perforated edge */
+    .ticket-perforation {
+      height: 20px;
+      background: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+    .ticket-perforation::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -10px; right: -10px;
+      height: 20px;
+      transform: translateY(-50%);
+      background: repeating-radial-gradient(circle at center, var(--bg-card) 0, var(--bg-card) 8px, transparent 8px, transparent 20px) 0 0 / 20px 20px;
+    }
+
+    .ticket-body { padding: var(--space-xl); }
+    .ticket-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); margin-bottom: var(--space-xl); }
+    .ticket-info-item { }
+    .ticket-info-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; }
+    .ticket-info-value { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .ticket-seats { margin-bottom: var(--space-lg); }
+    .ticket-seats-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px; }
+    .ticket-seats-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ticket-seat-chip { background: rgba(229,9,20,0.1); border: 1.5px solid rgba(229,9,20,0.4); border-radius: 6px; padding: 4px 12px; font-size: 14px; font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+
+    .ticket-footer { display: flex; justify-content: space-between; align-items: center; padding-top: var(--space-lg); border-top: 1px dashed var(--border); }
+    .ticket-total { font-family: var(--font-display); font-size: 28px; letter-spacing: 0.5px; color: var(--accent); }
+    .ticket-total-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+    .qr-placeholder { width: 80px; height: 80px; background: white; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 48px; padding: 4px; }
+
+    /* Actions */
+    .success-actions { display: flex; gap: var(--space-md); justify-content: center; flex-wrap: wrap; animation: slideUp 0.5s ease 0.4s both; }
+
+    /* Confetti */
+    .confetti-piece {
+      position: fixed; width: 8px; height: 8px; opacity: 0;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<main class="page-wrapper">
+  <div class="success-page">
+    <div class="success-wrapper">
+      <div class="success-icon-wrapper">
+        <div class="success-circle">
+          <span class="success-check">✓</span>
+        </div>
+      </div>
+
+      <h1 class="success-title">BOOKING <span>CONFIRMED</span></h1>
+      <p class="success-subtitle">Your tickets are booked! A confirmation has been sent to your registered email address. Enjoy the movie! 🎬</p>
+
+      <div class="ticket" id="ticketCard">
+        <div class="loading-page" style="height:300px"><div class="spinner"></div></div>
+      </div>
+
+      <div class="success-actions">
+        <a href="bookings.html" class="btn btn-secondary btn-lg">📋 View All Bookings</a>
+        <a href="movies.html" class="btn btn-primary btn-lg">🎬 Book Another Movie</a>
+        <button class="btn btn-ghost btn-lg" onclick="window.print()">🖨 Print Ticket</button>
+      </div>
+    </div>
+  </div>
+</main>
+<div id="footer-placeholder"></div>
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  renderNavbar();
+  renderFooter();
+
+  const stored = sessionStorage.getItem('lastBooking');
+  if (!stored) { window.location.href='movies.html'; return; }
+
+  const booking = JSON.parse(stored);
+  renderTicket(booking);
+  launchConfetti();
+  Toast.success('Booking confirmed! Enjoy the movie 🎉');
+  
+  // Save booking to localStorage so bookings page shows it
+  saveBookingLocally(booking);
+});
+
+function renderTicket(b) {
+  document.getElementById('ticketCard').innerHTML = `
+    <div class="ticket-header">
+      <div>
+        <div class="ticket-movie-title">${b.movieTitle||'MOVIE'}</div>
+        <div class="ticket-movie-meta">${b.theaterName||'Theater'} · ${b.screenName||'Screen 1'}</div>
+      </div>
+      <div class="ticket-id">
+        BOOKING ID<strong>${b.bookingId||'BK'+Date.now()}</strong>
+      </div>
+    </div>
+    <div class="ticket-perforation"></div>
+    <div class="ticket-body">
+      <div class="ticket-info-grid">
+        <div class="ticket-info-item">
+          <div class="ticket-info-label">Date</div>
+          <div class="ticket-info-value">${Utils.formatDate(b.showTime)}</div>
+        </div>
+        <div class="ticket-info-item">
+          <div class="ticket-info-label">Show Time</div>
+          <div class="ticket-info-value">${Utils.formatTime(b.showTime)}</div>
+        </div>
+        <div class="ticket-info-item">
+          <div class="ticket-info-label">Language</div>
+          <div class="ticket-info-value">${b.language||'English'}</div>
+        </div>
+      </div>
+      <div class="ticket-seats">
+        <div class="ticket-seats-label">Seats (${(b.seats||[]).length})</div>
+        <div class="ticket-seats-chips">
+          ${(b.seats||['A1']).map(s=>`<span class="ticket-seat-chip">${s}</span>`).join('')}
+        </div>
+      </div>
+      <div class="ticket-footer">
+        <div>
+          <div class="ticket-total-label">Total Paid</div>
+          <div class="ticket-total">${Utils.formatCurrency(b.totalAmount)}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">via ${paymentLabel(b.paymentMethod)} · TXN: ${b.transactionId||'—'}</div>
+        </div>
+        <div class="qr-placeholder">▦</div>
+      </div>
+    </div>
+  `;
+}
+
+function paymentLabel(method) {
+  return { card:'Credit/Debit Card', upi:'UPI', netbanking:'Net Banking', wallet:'Wallet' }[method] || 'Card';
+}
+
+function saveBookingLocally(booking) {
+  try {
+    const user = Auth.getUser();
+    const key = 'mv_bookings_' + (user?.id || 'guest');
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    
+    // Build a proper booking object
+    const newBooking = {
+      id: booking.bookingId || ('BK' + Date.now()),
+      movieTitle: booking.movieTitle || 'Movie',
+      theaterName: booking.theaterName || 'Theater',
+      city: booking.city || '',
+      showTime: booking.showTime || new Date().toISOString(),
+      screenName: booking.screenName || 'Screen 1',
+      seats: booking.seats || [],
+      totalAmount: booking.totalAmount || 0,
+      bookingStatus: 'CONFIRMED',
+      paymentStatus: 'SUCCESS',
+      transactionId: booking.transactionId || ('TXN' + Date.now()),
+      bookingTime: booking.bookingTime || new Date().toISOString(),
+      paymentMethod: booking.paymentMethod || 'card',
+    };
+    
+    // Avoid duplicates
+    const alreadyExists = existing.some(b => b.id === newBooking.id || b.transactionId === newBooking.transactionId);
+    if (!alreadyExists) {
+      existing.unshift(newBooking); // add to start
+      localStorage.setItem(key, JSON.stringify(existing));
+    }
+  } catch(e) {
+    console.error('Failed to save booking locally:', e);
+  }
+}
+
+function launchConfetti() {
+  const colors = ['#e50914','#f5c518','#22c55e','#3b82f6','#a855f7','#ffffff'];
+  for (let i=0; i<60; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `
+        left: ${Math.random()*100}vw;
+        background: ${colors[Math.floor(Math.random()*colors.length)]};
+        animation-duration: ${1.5+Math.random()*2}s;
+        animation-delay: ${Math.random()*0.5}s;
+        border-radius: ${Math.random()>0.5?'50%':'2px'};
+        transform: scale(${0.5+Math.random()});
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }, i*30);
+  }
+}
+</script>
+</body>
+</html>

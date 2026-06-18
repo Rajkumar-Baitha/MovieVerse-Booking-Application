@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Bookings — MovieVerse</title>
+  <link rel="stylesheet" href="../css/global.css"/>
+  <style>
+    .bookings-layout { display: grid; grid-template-columns: 280px 1fr; gap: var(--space-xl); align-items: start; padding-bottom: var(--space-2xl); }
+    .profile-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-xl); position: sticky; top: 90px; }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--accent-dim); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: var(--accent); margin: 0 auto var(--space-md); font-family: var(--font-display); }
+    .profile-name { text-align: center; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .profile-email { text-align: center; font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-lg); }
+    .profile-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+    .profile-stat { background: var(--bg-elevated); border-radius: var(--radius-sm); padding: var(--space-md); text-align: center; }
+    .profile-stat strong { display: block; font-family: var(--font-display); font-size: 24px; color: var(--text-primary); letter-spacing: 0.5px; }
+    .profile-stat span { font-size: 11px; color: var(--text-muted); }
+
+    .bookings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md); }
+    .tab-filters { display: flex; gap: var(--space-sm); }
+    .tab-btn { padding: 7px 20px; border-radius: 20px; border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary); font-family: var(--font-body); font-size: 13px; font-weight: 500; cursor: pointer; transition: var(--transition); }
+    .tab-btn:hover { border-color: var(--border-light); color: var(--text-primary); }
+    .tab-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    .booking-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: var(--space-lg);
+      margin-bottom: var(--space-md); transition: var(--transition);
+      display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-lg); align-items: center;
+    }
+    .booking-card:hover { border-color: var(--border-light); }
+    .booking-card.confirmed { border-left: 3px solid var(--success); }
+    .booking-card.pending { border-left: 3px solid var(--warning); }
+    .booking-card.cancelled { border-left: 3px solid var(--error); opacity: 0.7; }
+
+    .booking-poster { width: 64px; height: 96px; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-elevated); flex-shrink: 0; }
+    .booking-poster img { width: 100%; height: 100%; object-fit: cover; }
+
+    .booking-movie-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+    .booking-details { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-sm); }
+    .booking-detail { display: flex; align-items: center; gap: 4px; }
+    .booking-seats { display: flex; flex-wrap: wrap; gap: 4px; }
+    .booking-seat-chip { background: var(--accent-dim); border: 1px solid rgba(229,9,20,0.3); border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
+
+    .booking-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-sm); min-width: 120px; }
+    .booking-amount { font-family: var(--font-display); font-size: 22px; color: var(--text-primary); letter-spacing: 0.5px; }
+    .booking-txn { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+
+    .cancel-btn { font-size: 12px; color: var(--error); background: none; border: 1px solid rgba(239,68,68,0.3); border-radius: 4px; padding: 4px 10px; cursor: pointer; transition: var(--transition); }
+    .cancel-btn:hover { background: rgba(239,68,68,0.1); }
+
+    .cancel-modal-content h3 { font-size: 20px; font-weight: 600; margin-bottom: var(--space-sm); }
+    .cancel-modal-content p { font-size: 14px; color: var(--text-secondary); margin-bottom: var(--space-xl); line-height: 1.6; }
+
+    @media (max-width: 900px) {
+      .bookings-layout { grid-template-columns: 1fr; }
+      .profile-card { position: static; }
+    }
+    @media (max-width: 600px) {
+      .booking-card { grid-template-columns: 1fr; gap: var(--space-md); }
+      .booking-poster { display: none; }
+      .booking-right { align-items: flex-start; text-align: left; flex-direction: row; flex-wrap: wrap; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<main class="page-wrapper">
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">MY <span style="color:var(--accent)">BOOKINGS</span></h1>
+      <p class="page-subtitle">Your complete booking history</p>
+    </div>
+    <div class="bookings-layout">
+      <!-- Profile Sidebar -->
+      <aside class="profile-card" id="profileCard">
+        <div class="loading-page" style="height:200px"><div class="spinner"></div></div>
+      </aside>
+
+      <!-- Bookings List -->
+      <div>
+        <div class="bookings-header">
+          <div class="tab-filters">
+            <button class="tab-btn active" onclick="filterBookings('all', this)">All</button>
+            <button class="tab-btn" onclick="filterBookings('CONFIRMED', this)">Confirmed</button>
+            <button class="tab-btn" onclick="filterBookings('PENDING', this)">Pending</button>
+            <button class="tab-btn" onclick="filterBookings('CANCELLED', this)">Cancelled</button>
+          </div>
+        </div>
+        <div id="bookingsList">
+          <div class="loading-page"><div class="spinner"></div><span>Loading bookings...</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Cancel Modal -->
+<div id="cancelModal" style="display:none">
+  <div class="modal-backdrop" onclick="closeCancelModal()">
+    <div class="modal cancel-modal-content" onclick="event.stopPropagation()">
+      <h3>Cancel Booking?</h3>
+      <p>Are you sure you want to cancel this booking? Refund will be processed within 5-7 business days to your original payment method.</p>
+      <div style="display:flex;gap:12px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeCancelModal()">Keep Booking</button>
+        <button class="btn btn-primary" style="background:var(--error);border-color:var(--error)" id="confirmCancelBtn">Yes, Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="footer-placeholder"></div>
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script>
+if (!Auth.isLoggedIn()) window.location.href='login.html';
+
+// No mock bookings - we use real data from API or localStorage
+
+let allBookings = [];
+let currentFilter = 'all';
+let cancelTargetId = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  renderNavbar('bookings');
+  renderFooter();
+  renderProfile();
+  await loadBookings();
+});
+
+function renderProfile() {
+  const user = Auth.getUser();
+  if (!user) return;
+  const stats = { total: allBookings.length, confirmed: allBookings.filter(b=>b.bookingStatus==='CONFIRMED').length };
+  document.getElementById('profileCard').innerHTML = `
+    <div class="profile-avatar">${user.fullName?.[0]?.toUpperCase()||'U'}</div>
+    <div class="profile-name">${user.fullName||'User'}</div>
+    <div class="profile-email">${user.email||''}</div>
+    <div style="margin-bottom:var(--space-lg)">
+      <span class="badge ${user.role==='ADMIN'?'badge-red':'badge-blue'}">${user.role||'USER'}</span>
+    </div>
+    <div class="profile-stats">
+      <div class="profile-stat"><strong>${allBookings.length}</strong><span>Total</span></div>
+      <div class="profile-stat"><strong>${allBookings.filter(b=>b.bookingStatus==='CONFIRMED').length}</strong><span>Confirmed</span></div>
+      <div class="profile-stat"><strong>${allBookings.filter(b=>b.bookingStatus==='CANCELLED').length}</strong><span>Cancelled</span></div>
+      <div class="profile-stat"><strong>${Utils.formatCurrency(allBookings.reduce((s,b)=>s+(b.totalAmount||0),0)).replace('₹','')}</strong><span>Spent (₹)</span></div>
+    </div>
+  `;
+}
+
+async function loadBookings() {
+  const user = Auth.getUser();
+  
+  // Load locally stored bookings first (from sessionStorage)
+  let localBookings = [];
+  try {
+    const stored = JSON.parse(localStorage.getItem('mv_bookings_' + (user?.id || 'guest')) || '[]');
+    localBookings = Array.isArray(stored) ? stored : [];
+  } catch { localBookings = []; }
+
+  try {
+    const res = await API.bookings.getUserBookings(user?.id);
+    const serverBookings = Array.isArray(res) ? res : (res?.content || []);
+    if (serverBookings.length) {
+      allBookings = serverBookings;
+    } else {
+      allBookings = localBookings;
+    }
+  } catch { 
+    // API failed, use locally stored bookings
+    allBookings = localBookings;
+  }
+  renderProfile();
+  renderBookings();
+}
+
+function filterBookings(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBookings();
+}
+
+function renderBookings() {
+  const list = document.getElementById('bookingsList');
+  let bookings = currentFilter === 'all' ? allBookings : allBookings.filter(b => b.bookingStatus === currentFilter);
+  bookings.sort((a,b) => new Date(b.bookingTime) - new Date(a.bookingTime));
+
+  if (!bookings.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🎟️</div>
+        <h3>No bookings found</h3>
+        <p>${currentFilter==='all'?'You haven\'t booked any tickets yet.':'No '+currentFilter.toLowerCase()+' bookings.'}</p>
+        ${currentFilter==='all'?'<a href="movies.html" class="btn btn-primary" style="margin-top:16px">Browse Movies</a>':''}
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = bookings.map(b => `
+    <div class="booking-card ${b.bookingStatus?.toLowerCase()||''}">
+      <div class="booking-poster">
+        <img src="https://placehold.co/64x96/16161f/e50914?text=${encodeURIComponent((b.movieTitle||'M').slice(0,1))}" alt="${b.movieTitle}"/>
+      </div>
+      <div>
+        <div class="booking-movie-title">${b.movieTitle||'Movie'}</div>
+        <div class="booking-details">
+          <span class="booking-detail">🏛 ${b.theaterName||'—'}</span>
+          <span class="booking-detail">📅 ${Utils.formatDate(b.showTime)}</span>
+          <span class="booking-detail">⏰ ${Utils.formatTime(b.showTime)}</span>
+          <span class="booking-detail">🎭 ${b.screenName||'—'}</span>
+        </div>
+        <div class="booking-seats">
+          ${(b.seats||[]).map(s=>`<span class="booking-seat-chip">${s}</span>`).join('')}
+        </div>
+      </div>
+      <div class="booking-right">
+        <span class="badge ${Utils.getStatusBadge(b.bookingStatus)}">${b.bookingStatus||'—'}</span>
+        <span class="booking-amount">${Utils.formatCurrency(b.totalAmount)}</span>
+        <span class="booking-txn">TXN: ${b.transactionId||'—'}</span>
+        <span style="font-size:12px;color:var(--text-muted)">${Utils.formatDate(b.bookingTime)}</span>
+        ${b.bookingStatus==='CONFIRMED' && new Date(b.showTime) > new Date()
+          ? `<button class="cancel-btn" onclick="showCancelModal('${b.id}')">Cancel</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function showCancelModal(bookingId) {
+  cancelTargetId = bookingId;
+  document.getElementById('cancelModal').style.display='block';
+  document.getElementById('confirmCancelBtn').onclick = confirmCancel;
+}
+
+function closeCancelModal() {
+  cancelTargetId = null;
+  document.getElementById('cancelModal').style.display='none';
+}
+
+async function confirmCancel() {
+  if (!cancelTargetId) return;
+  try {
+    await API.bookings.cancel(cancelTargetId);
+  } catch {}
+  const idx = allBookings.findIndex(b=>b.id===cancelTargetId);
+  if (idx>=0) { allBookings[idx].bookingStatus='CANCELLED'; allBookings[idx].paymentStatus='REFUNDED'; }
+  closeCancelModal();
+  renderBookings();
+  renderProfile();
+  Toast.success('Booking cancelled. Refund will be processed in 5-7 days.');
+}
+</script>
+</body>
+</html>

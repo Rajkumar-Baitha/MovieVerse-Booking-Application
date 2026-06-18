@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Movie Details — MovieVerse</title>
+  <link rel="stylesheet" href="../css/global.css"/>
+  <style>
+    .movie-hero { position: relative; min-height: 500px; display: flex; align-items: flex-end; overflow: hidden; }
+    .movie-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: blur(2px) brightness(0.3); transform: scale(1.05); }
+    .movie-hero-gradient { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg-primary) 0%, rgba(10,10,15,0.5) 60%, transparent 100%); }
+    .movie-hero-content { position: relative; z-index: 2; display: flex; gap: var(--space-xl); align-items: flex-end; padding: var(--space-2xl) 0 var(--space-xl); width: 100%; }
+    .movie-hero-poster { width: 220px; flex-shrink: 0; border-radius: var(--radius-md); overflow: hidden; border: 2px solid var(--border); box-shadow: var(--shadow-lg); aspect-ratio: 2/3; background: var(--bg-elevated); }
+    .movie-hero-poster img { width: 100%; height: 100%; object-fit: cover; }
+    .movie-hero-info { flex: 1; }
+    .movie-hero-title { font-family: var(--font-display); font-size: clamp(32px, 5vw, 64px); letter-spacing: 1px; line-height: 1; margin-bottom: var(--space-md); }
+    .movie-tags { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md); }
+    .movie-stats { display: flex; gap: var(--space-xl); margin-bottom: var(--space-lg); flex-wrap: wrap; }
+    .movie-stat { display: flex; flex-direction: column; gap: 2px; }
+    .movie-stat-value { font-family: var(--font-display); font-size: 24px; letter-spacing: 0.5px; color: var(--text-primary); }
+    .movie-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .movie-actions { display: flex; gap: var(--space-md); flex-wrap: wrap; }
+
+    .movie-body { padding: var(--space-2xl) 0; }
+    .movie-body-layout { display: grid; grid-template-columns: 1fr 340px; gap: var(--space-2xl); }
+    .movie-section { margin-bottom: var(--space-2xl); }
+    .movie-section-title { font-family: var(--font-display); font-size: 22px; letter-spacing: 1px; margin-bottom: var(--space-lg); color: var(--text-primary); border-left: 3px solid var(--accent); padding-left: var(--space-md); }
+    .movie-description { font-size: 15px; color: var(--text-secondary); line-height: 1.8; }
+
+    .shows-date-tabs { display: flex; gap: var(--space-sm); overflow-x: auto; padding-bottom: var(--space-sm); margin-bottom: var(--space-lg); }
+    .date-tab { flex-shrink: 0; padding: 8px 20px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; font-family: var(--font-body); font-size: 13px; font-weight: 500; transition: var(--transition); text-align: center; }
+    .date-tab:hover { border-color: var(--border-light); }
+    .date-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .date-tab .date-day { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .date-tab .date-num { display: block; font-family: var(--font-display); font-size: 22px; letter-spacing: 0.5px; }
+
+    .theater-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-md); transition: var(--transition); }
+    .theater-block:hover { border-color: var(--border-light); }
+    .theater-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+    .theater-location { font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md); }
+    .show-times { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+    .show-time-btn { padding: 7px 18px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: transparent; color: var(--text-primary); cursor: pointer; font-family: var(--font-mono); font-size: 13px; font-weight: 500; transition: var(--transition); }
+    .show-time-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .show-time-btn.selected { border-color: var(--accent); background: var(--accent); color: white; }
+    .show-time-btn .show-price { display: block; font-size: 10px; font-family: var(--font-body); opacity: 0.8; }
+
+    .sidebar-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-lg); }
+    .sidebar-card-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-md); }
+    .cast-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .cast-item { display: flex; gap: var(--space-sm); align-items: center; }
+    .cast-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--accent); border: 1px solid var(--border); flex-shrink: 0; }
+    .cast-name { font-size: 14px; font-weight: 500; }
+    .cast-role { font-size: 12px; color: var(--text-muted); }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row span:first-child { color: var(--text-muted); }
+    .info-row span:last-child { color: var(--text-primary); font-weight: 500; }
+
+    @media (max-width: 900px) {
+      .movie-body-layout { grid-template-columns: 1fr; }
+      .movie-hero-content { flex-direction: column; align-items: flex-start; }
+      .movie-hero-poster { width: 160px; }
+    }
+    @media (max-width: 600px) {
+      .movie-hero-poster { display: none; }
+      .movie-stats { gap: var(--space-lg); }
+    }
+  </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<main class="page-wrapper">
+  <div id="movieHero">
+    <div class="loading-page" style="height:400px"><div class="spinner"></div></div>
+  </div>
+  <div class="container">
+    <div class="movie-body">
+      <div class="movie-body-layout">
+        <div id="movieMain">
+          <div class="loading-page"><div class="spinner"></div></div>
+        </div>
+        <aside id="movieSidebar"></aside>
+      </div>
+    </div>
+  </div>
+</main>
+<div id="footer-placeholder"></div>
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script>
+const MOCK_MOVIES = {
+  1:{id:1,title:'Galactic Storm',genre:'Sci-Fi',language:'English',duration:148,releaseDate:'2025-02-15',rating:8.4,description:'An epic space opera about humanity\'s last stand against an alien armada threatening Earth. Featuring breathtaking visual effects, pulse-pounding action sequences and an emotionally resonant story about sacrifice and hope.',cast:[{name:'Chris Drake',role:'Commander Hayes'},{name:'Mia Santos',role:'Dr. Elena Ross'},{name:'Jake Torres',role:'Lt. Kiran Patel'}],director:'James Cameron II',language2:'English'},
+  2:{id:2,title:'Shadow Protocol',genre:'Action',language:'English',duration:124,releaseDate:'2025-01-20',rating:7.9,description:'A rogue agent uncovers a global conspiracy that goes all the way to the top. Fast-paced action and sharp twists keep you on the edge.',cast:[{name:'Adam Knight',role:'Agent Zero'},{name:'Priya Nair',role:'Handler Nova'}],director:'Vin Russo'},
+  3:{id:3,title:'Neon Requiem',genre:'Thriller',language:'English',duration:135,releaseDate:'2025-01-10',rating:8.1,description:'In a cyberpunk city, a detective unravels a series of mysterious murders connected to a powerful AI corporation.',cast:[{name:'Leo Park',role:'Det. Haruto'},{name:'Sara Voss',role:'Aria'},{name:'Max Blaine',role:'Director Keel'}],director:'Sofia Diaz'},
+  4:{id:4,title:'Dil Ka Safar',genre:'Romance',language:'Hindi',duration:158,releaseDate:'2025-02-01',rating:7.6,description:'A timeless love story set against the backdrop of the Himalayas, where two strangers find themselves drawn together by fate.',cast:[{name:'Ranbir Mehra',role:'Arjun'},{name:'Ananya Das',role:'Rhea'}],director:'Karan Seth'},
+};
+
+const MOCK_THEATERS = [
+  {id:1,name:'PVR Cinemas',city:'Delhi',address:'Connaught Place'},
+  {id:2,name:'INOX Multiplex',city:'Delhi',address:'Select Citywalk'},
+  {id:3,name:'Cinepolis',city:'Delhi',address:'DLF Mall'},
+];
+
+const MOCK_SHOWS = [
+  {id:101,theaterId:1,theaterName:'PVR Cinemas',city:'Delhi',showTime:'2025-06-01T10:00:00',ticketPrice:250,screenName:'Screen 1'},
+  {id:102,theaterId:1,theaterName:'PVR Cinemas',city:'Delhi',showTime:'2025-06-01T13:30:00',ticketPrice:300,screenName:'Screen 1'},
+  {id:103,theaterId:1,theaterName:'PVR Cinemas',city:'Delhi',showTime:'2025-06-01T18:00:00',ticketPrice:350,screenName:'Screen 2'},
+  {id:104,theaterId:2,theaterName:'INOX Multiplex',city:'Delhi',showTime:'2025-06-01T11:00:00',ticketPrice:280,screenName:'Screen A'},
+  {id:105,theaterId:2,theaterName:'INOX Multiplex',city:'Delhi',showTime:'2025-06-01T16:30:00',ticketPrice:320,screenName:'Screen A'},
+  {id:106,theaterId:3,theaterName:'Cinepolis',city:'Delhi',showTime:'2025-06-01T14:00:00',ticketPrice:260,screenName:'Audi 3'},
+];
+
+let movie = null;
+let selectedDate = 0;
+const dates = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  renderNavbar('movies');
+  renderFooter();
+  const id = Utils.getQueryParam('id');
+  if (!id) { window.location.href='movies.html'; return; }
+  await loadMovie(id);
+});
+
+async function loadMovie(id) {
+  try {
+    movie = await API.movies.getById(id);
+    if (!movie || !movie.id) throw new Error('Invalid movie data');
+  } catch { 
+    // Fallback to mock only for the correct ID
+    movie = MOCK_MOVIES[parseInt(id)] || MOCK_MOVIES[id] || null;
+    if (!movie) {
+      // Try to get from sessionStorage (set when clicking movie card)
+      const cached = sessionStorage.getItem('movieCache_' + id);
+      if (cached) movie = JSON.parse(cached);
+    }
+    if (!movie) {
+      Toast.error('Movie not found');
+      setTimeout(() => window.location.href='movies.html', 1500);
+      return;
+    }
+  }
+  // Cache movie data for offline fallback
+  sessionStorage.setItem('movieCache_' + movie.id, JSON.stringify(movie));
+  renderHero();
+  renderMain();
+  renderSidebar();
+  generateDates();
+  renderDateTabs();
+  loadShows();
+}
+
+function renderHero() {
+  const poster = Utils.getPosterUrl(movie);
+  document.getElementById('movieHero').innerHTML = `
+    <div class="movie-hero">
+      <div class="movie-hero-bg" style="background-image:url('${poster}')"></div>
+      <div class="movie-hero-gradient"></div>
+      <div class="container" style="width:100%">
+        <div class="movie-hero-content">
+          <div class="movie-hero-poster">
+            <img src="${poster}" alt="${movie.title}" onerror="this.src='https://placehold.co/300x450/16161f/e50914?text=${encodeURIComponent(movie.title)}'"/>
+          </div>
+          <div class="movie-hero-info">
+            <div class="movie-tags">
+              <span class="badge badge-red">${movie.genre||'—'}</span>
+              <span class="badge badge-gray">${movie.language||'—'}</span>
+              ${movie.rating ? `<span class="badge badge-gold">⭐ ${movie.rating}/10</span>` : '<span class="badge badge-blue">Upcoming</span>'}
+            </div>
+            <h1 class="movie-hero-title">${movie.title}</h1>
+            <div class="movie-stats">
+              <div class="movie-stat"><span class="movie-stat-value">${movie.duration||'?'}<span style="font-size:16px"> min</span></span><span class="movie-stat-label">Duration</span></div>
+              ${movie.rating ? `<div class="movie-stat"><span class="movie-stat-value">${movie.rating}</span><span class="movie-stat-label">IMDb Rating</span></div>` : ''}
+              <div class="movie-stat"><span class="movie-stat-value">${Utils.formatDate(movie.releaseDate)}</span><span class="movie-stat-label">Release Date</span></div>
+            </div>
+            <div class="movie-actions">
+              <button class="btn btn-primary btn-lg" onclick="scrollToShows()">🎟 Book Tickets</button>
+              ${movie.trailerUrl ? `<a href="${movie.trailerUrl}" target="_blank" class="btn btn-secondary btn-lg">▶ Watch Trailer</a>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMain() {
+  document.getElementById('movieMain').innerHTML = `
+    <div class="movie-section">
+      <h3 class="movie-section-title">About the Film</h3>
+      <p class="movie-description">${movie.description || 'No description available.'}</p>
+    </div>
+    <div class="movie-section" id="showsSection">
+      <h3 class="movie-section-title">Book Tickets</h3>
+      <div class="shows-date-tabs" id="dateTabs"></div>
+      <div id="showsList"><div class="loading-page"><div class="spinner"></div></div></div>
+    </div>
+  `;
+}
+
+function renderSidebar() {
+  const cast = movie.cast || [{name:'Unknown Actor',role:'Lead Role'}];
+  document.getElementById('movieSidebar').innerHTML = `
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">Movie Info</div>
+      <div class="info-row"><span>Director</span><span>${movie.director||'N/A'}</span></div>
+      <div class="info-row"><span>Genre</span><span>${movie.genre||'N/A'}</span></div>
+      <div class="info-row"><span>Language</span><span>${movie.language||'N/A'}</span></div>
+      <div class="info-row"><span>Duration</span><span>${movie.duration||'?'} min</span></div>
+      <div class="info-row"><span>Release</span><span>${Utils.formatDate(movie.releaseDate)}</span></div>
+    </div>
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">Cast</div>
+      <div class="cast-list">
+        ${cast.map(c => `
+          <div class="cast-item">
+            <div class="cast-avatar">${c.name[0]}</div>
+            <div><div class="cast-name">${c.name}</div><div class="cast-role">${c.role}</div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function generateDates() {
+  dates.length = 0;
+  const today = new Date();
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  for (let i=0; i<7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate()+i);
+    dates.push({ label: i===0?'Today':i===1?'Tomorrow':dayNames[d.getDay()], day: d.getDate(), month: d.getMonth()+1, full: d });
+  }
+}
+
+function renderDateTabs() {
+  const el = document.getElementById('dateTabs');
+  if (!el) return;
+  el.innerHTML = dates.map((d,i) => `
+    <button class="date-tab ${i===selectedDate?'active':''}" onclick="selectDate(${i})">
+      <span class="date-day">${d.label}</span>
+      <span class="date-num">${d.day}</span>
+    </button>
+  `).join('');
+}
+
+function selectDate(idx) {
+  selectedDate = idx;
+  renderDateTabs();
+  loadShows();
+}
+
+async function loadShows() {
+  const showsList = document.getElementById('showsList');
+  if (!showsList) return;
+  showsList.innerHTML = '<div class="loading-page" style="height:120px"><div class="spinner"></div></div>';
+  let shows = [];
+  try {
+    const res = await API.shows.getByMovie(movie.id);
+    shows = Array.isArray(res) ? res : (res?.content || []);
+    if (!shows.length) shows = MOCK_SHOWS;
+  } catch { shows = MOCK_SHOWS; }
+
+  // Group by theater
+  const byTheater = {};
+  shows.forEach(s => {
+    const key = s.theaterId || s.theaterName;
+    if (!byTheater[key]) byTheater[key] = { name: s.theaterName||'Theater', city: s.city||'', shows: [] };
+    byTheater[key].shows.push(s);
+  });
+
+  if (!Object.keys(byTheater).length) {
+    showsList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📅</div><h3>No shows today</h3><p>Try another date.</p></div>';
+    return;
+  }
+
+  showsList.innerHTML = Object.values(byTheater).map(t => `
+    <div class="theater-block">
+      <div class="theater-name">${t.name}</div>
+      <div class="theater-location">📍 ${t.city}</div>
+      <div class="show-times">
+        ${t.shows.map(s => `
+          <button class="show-time-btn" onclick="selectShow(${JSON.stringify(s).replace(/"/g,'&quot;')}, '${t.name}')">
+            ${Utils.formatTime(s.showTime)}
+            <span class="show-price">${Utils.formatCurrency(s.ticketPrice)}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectShow(show, theaterName) {
+  if (!Auth.isLoggedIn()) {
+    Toast.warning('Please login to book tickets');
+    setTimeout(() => window.location.href=`login.html?redirect=${encodeURIComponent(window.location.href)}`, 1000);
+    return;
+  }
+  sessionStorage.setItem('selectedShow', JSON.stringify({ ...show, theaterName, movieTitle: movie.title, movieId: movie.id }));
+  window.location.href = `seat-selection.html?showId=${show.id}`;
+}
+
+function scrollToShows() {
+  document.getElementById('showsSection')?.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+</script>
+</body>
+</html>

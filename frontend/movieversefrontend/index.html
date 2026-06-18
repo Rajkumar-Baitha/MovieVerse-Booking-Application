@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MovieVerse — Book Your Cinema Experience</title>
+  <link rel="stylesheet" href="css/global.css"/>
+  <style>
+    /* ---- HERO ---- */
+    .hero {
+      position: relative;
+      height: 100vh;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 60% 40%, rgba(229,9,20,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 10% 60%, rgba(245,197,24,0.06) 0%, transparent 60%),
+        linear-gradient(135deg, #0a0a0f 0%, #0f0f18 100%);
+    }
+    .hero-bg-pattern {
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px),
+        repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px);
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 680px;
+      padding: 0 var(--space-xl);
+      margin-left: calc((100vw - 1280px) / 2);
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: var(--accent-dim);
+      border: 1px solid rgba(229,9,20,0.35);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: var(--space-lg);
+      animation: fadeInDown 0.6s ease;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(52px, 8vw, 96px);
+      line-height: 0.95;
+      letter-spacing: 2px;
+      color: var(--text-primary);
+      animation: fadeInDown 0.7s ease 0.1s both;
+    }
+    .hero-title .line-accent { color: var(--accent); display: block; }
+    .hero-title .line-gold { color: var(--gold); display: block; }
+    .hero-subtitle {
+      font-size: 17px;
+      color: var(--text-secondary);
+      margin-top: var(--space-lg);
+      line-height: 1.7;
+      max-width: 500px;
+      animation: fadeInDown 0.7s ease 0.2s both;
+    }
+    .hero-actions {
+      display: flex;
+      gap: var(--space-md);
+      margin-top: var(--space-xl);
+      animation: fadeInDown 0.7s ease 0.3s both;
+    }
+    .hero-stats {
+      display: flex;
+      gap: var(--space-xl);
+      margin-top: var(--space-2xl);
+      animation: fadeInDown 0.7s ease 0.4s both;
+    }
+    .hero-stat strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 36px;
+      color: var(--text-primary);
+      letter-spacing: 1px;
+    }
+    .hero-stat span {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .hero-film-strip {
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 42%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 10px;
+      opacity: 0.7;
+    }
+    .film-card {
+      aspect-ratio: 2/3;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .film-card:nth-child(odd) { transform: translateY(-15px); }
+    .film-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---- SEARCH BAR ---- */
+    .search-section {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-lg) 0;
+    }
+    .search-bar {
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0;
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .search-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .search-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 14px 18px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 15px;
+    }
+    .search-bar input::placeholder { color: var(--text-muted); }
+    .search-bar button {
+      padding: 0 24px;
+      background: var(--accent);
+      border: none;
+      color: white;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .search-bar button:hover { background: var(--accent-hover); }
+
+    /* ---- MOVIE CARDS ---- */
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--space-lg);
+    }
+    .movie-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+    .movie-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(229,9,20,0.2);
+    }
+    .movie-poster {
+      position: relative;
+      aspect-ratio: 2/3;
+      overflow: hidden;
+      background: var(--bg-elevated);
+    }
+    .movie-poster img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: var(--transition-slow);
+    }
+    .movie-card:hover .movie-poster img { transform: scale(1.06); }
+    .movie-poster-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%);
+      opacity: 0;
+      transition: var(--transition);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: var(--space-md);
+    }
+    .movie-card:hover .movie-poster-overlay { opacity: 1; }
+    .movie-play-btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .movie-rating-chip {
+      position: absolute;
+      top: var(--space-sm);
+      right: var(--space-sm);
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      border-radius: 20px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold);
+      display: flex; align-items: center; gap: 3px;
+    }
+    .movie-info {
+      padding: var(--space-md);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .movie-title-text {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-primary);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .movie-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .movie-meta-dot { opacity: 0.4; }
+
+    /* ---- GENRE FILTERS ---- */
+    .genre-filters {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-xl);
+    }
+    .genre-btn {
+      padding: 6px 18px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .genre-btn:hover, .genre-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* ---- FEATURED BANNER ---- */
+    .featured-banner {
+      background: linear-gradient(135deg, var(--bg-elevated) 0%, #1a1a2e 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-2xl);
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: var(--space-xl);
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: var(--space-2xl);
+    }
+    .featured-banner::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(229,9,20,0.1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .featured-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      background: var(--accent);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: var(--space-md);
+    }
+    .featured-title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 4vw, 52px);
+      letter-spacing: 1px;
+      line-height: 1;
+      margin-bottom: var(--space-md);
+    }
+    .featured-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      max-width: 480px;
+      margin-bottom: var(--space-xl);
+    }
+    .featured-poster {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      aspect-ratio: 2/3;
+      border: 2px solid var(--border);
+      position: relative;
+    }
+    .featured-poster img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    /* ---- PROMO STRIP ---- */
+    .promo-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      margin: var(--space-2xl) 0;
+    }
+    .promo-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      transition: var(--transition);
+    }
+    .promo-card:hover { border-color: var(--border-light); transform: translateY(-3px); }
+    .promo-icon {
+      font-size: 36px;
+      width: 64px; height: 64px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .promo-card h3 { font-size: 18px; font-weight: 600; }
+    .promo-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    @media (max-width: 900px) {
+      .hero-film-strip { display: none; }
+      .hero-content { margin-left: 0; }
+      .featured-banner { grid-template-columns: 1fr; }
+      .featured-banner .featured-poster { max-width: 200px; }
+      .promo-strip { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .hero-stats { gap: var(--space-lg); }
+      .hero-actions { flex-direction: column; }
+      .movie-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <main class="page-wrapper">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-bg-pattern"></div>
+      <div class="hero-content">
+        <div class="hero-eyebrow">🎬 Now Showing</div>
+        <h1 class="hero-title">
+          CINEMA
+          <span class="line-accent">REIMAGINED</span>
+          <span class="line-gold">FOR YOU</span>
+        </h1>
+        <p class="hero-subtitle">
+          Book tickets instantly, select your perfect seat, and experience movies the way they were meant to be seen.
+        </p>
+        <div class="hero-actions">
+          <a href="pages/movies.html" class="btn btn-primary btn-lg">Browse Movies</a>
+          <a href="pages/register.html" class="btn btn-secondary btn-lg">Get Started Free</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>500+</strong><span>Movies</span></div>
+          <div class="hero-stat"><strong>120+</strong><span>Theaters</span></div>
+          <div class="hero-stat"><strong>2M+</strong><span>Happy Viewers</span></div>
+        </div>
+      </div>
+      <div class="hero-film-strip" id="heroFilmStrip"></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section class="search-section">
+      <div class="container">
+        <div class="search-bar">
+          <input type="text" id="heroSearch" placeholder="Search movies, genres, actors..." autocomplete="off"/>
+          <button onclick="doHeroSearch()">Search</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURED -->
+    <section class="section">
+      <div class="container">
+        <div class="featured-banner" id="featuredBanner">
+          <div class="loading-page"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOW SHOWING -->
+    <section class="section" id="now-showing">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">NOW <span>SHOWING</span></h2>
+          <a href="pages/movies.html" class="btn btn-ghost btn-sm">View All →</a>
+        </div>
+        <div class="genre-filters" id="genreFilters"></div>
+        <div class="movie-grid" id="nowShowingGrid">
+          <div class="loading-page" style="grid-column:1/-1"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROMO STRIP -->
+    <section class="section">
+      <div class="container">
+        <div class="promo-strip">
+          <div class="promo-card">
+            <div class="promo-icon">🎟️</div>
+            <h3>Instant Booking</h3>
+            <p>Book your tickets in under 60 seconds. No queues, no hassle — just pure cinema magic.</p>
+          </div>
+          <div class="promo-card">
+            <div class="promo-icon">💺</div>
+            <h3>Pick Your Seat</h3>
+            <p>Interactive seat map lets you choose exactly where you want to sit. Your spot, your call.</p>
+          </div>
+          <div class="promo-card">
+            <div class="promo-icon">🔒</div>
+            <h3>Secure Payments</h3>
+            <p>Encrypted payment processing keeps your data safe. Multiple payment options available.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMING SOON -->
+    <section class="section" id="coming-soon">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">COMING <span>SOON</span></h2>
+        </div>
+        <div class="movie-grid" id="comingSoonGrid">
+          <div class="loading-page" style="grid-column:1/-1"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Mock data for demo when API is not connected
+    const MOCK_MOVIES = [
+      { id: 1, title: 'Galactic Storm', genre: 'Sci-Fi', language: 'English', duration: 148, releaseDate: '2025-03-15', description: 'An epic space opera about humanity\'s last stand against an alien armada threatening Earth.', rating: 8.4 },
+      { id: 2, title: 'Shadow Protocol', genre: 'Action', language: 'English', duration: 124, releaseDate: '2025-02-20', description: 'A rogue agent uncovers a global conspiracy that goes all the way to the top.', rating: 7.9 },
+      { id: 3, title: 'Neon Requiem', genre: 'Thriller', language: 'English', duration: 135, releaseDate: '2025-01-10', description: 'In a cyberpunk city, a detective unravels a series of mysterious murders.', rating: 8.1 },
+      { id: 4, title: 'Dil Ka Safar', genre: 'Romance', language: 'Hindi', duration: 158, releaseDate: '2025-03-01', description: 'A timeless love story set against the backdrop of the Himalayas.', rating: 7.6 },
+      { id: 5, title: 'Iron Fist Rising', genre: 'Action', language: 'English', duration: 142, releaseDate: '2025-04-05', description: 'A martial arts legend rises from retirement to save his city one last time.', rating: 8.0 },
+      { id: 6, title: 'The Last Garden', genre: 'Drama', language: 'English', duration: 118, releaseDate: '2025-02-14', description: 'An emotional journey of a family reconnecting through a shared love of nature.', rating: 7.3 },
+      { id: 7, title: 'Quantum Break', genre: 'Sci-Fi', language: 'English', duration: 160, releaseDate: '2025-05-01', description: 'Time itself fractures as a scientist race to prevent paradox from unraveling reality.', rating: 0 },
+      { id: 8, title: 'Raat Ka Raja', genre: 'Horror', language: 'Hindi', duration: 112, releaseDate: '2025-05-20', description: 'Ancient evil awakens in a forgotten haveli, terrorizing all who enter.', rating: 0 },
+    ];
+
+    const GENRES = ['All', 'Action', 'Drama', 'Sci-Fi', 'Romance', 'Horror', 'Thriller', 'Comedy'];
+    let activeGenre = 'All';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderNavbar('home');
+      renderFooter();
+      renderGenreFilters();
+      await loadMovies();
+      renderHeroFilmStrip();
+    });
+
+    function renderGenreFilters() {
+      const el = document.getElementById('genreFilters');
+      el.innerHTML = GENRES.map(g => `
+        <button class="genre-btn ${g === 'All' ? 'active' : ''}" onclick="filterGenre('${g}', this)">${g}</button>
+      `).join('');
+    }
+
+    function filterGenre(genre, btn) {
+      activeGenre = genre;
+      document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderNowShowing(MOCK_MOVIES);
+    }
+
+    async function loadMovies() {
+      let movies = MOCK_MOVIES;
+      try {
+        const res = await API.movies.getAll('size=20');
+        if (res?.content) movies = res.content;
+        else if (Array.isArray(res)) movies = res;
+      } catch (e) { /* use mock */ }
+
+      renderFeatured(movies[0]);
+      renderNowShowing(movies);
+      renderComingSoon(movies);
+    }
+
+    function renderFeatured(movie) {
+      if (!movie) return;
+      const el = document.getElementById('featuredBanner');
+      el.innerHTML = `
+        <div>
+          <div class="featured-badge">🔥 Featured Film</div>
+          <h2 class="featured-title">${movie.title}</h2>
+          <p class="featured-desc">${movie.description || 'An unforgettable cinematic experience awaits you.'}</p>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:24px">
+            <span class="badge badge-red">${movie.genre || 'Drama'}</span>
+            <span class="badge badge-gray">${movie.language || 'English'}</span>
+            <span class="badge badge-gray">⏱ ${movie.duration || 120} min</span>
+            ${movie.rating ? `<span class="badge badge-gold">⭐ ${movie.rating}</span>` : ''}
+          </div>
+          <a href="#" onclick="event.preventDefault();cacheMovieAndGo(movie, true)" class="btn btn-primary btn-lg">Book Now</a>
+          <a href="#" onclick="event.preventDefault();cacheMovieAndGo(movie, true)" class="btn btn-secondary btn-lg" style="margin-left:12px">More Details</a>
+        </div>
+        <div class="featured-poster">
+          <img src="${Utils.getPosterUrl(movie)}" alt="${movie.title}" onerror="this.src='https://placehold.co/300x450/16161f/e50914?text=${encodeURIComponent(movie.title)}'"/>
+        </div>
+      `;
+    }
+
+    function renderNowShowing(movies) {
+      const grid = document.getElementById('nowShowingGrid');
+      let filtered = activeGenre === 'All' ? movies : movies.filter(m => m.genre === activeGenre);
+      const nowShowing = filtered.filter(m => !m.releaseDate || new Date(m.releaseDate) <= new Date());
+
+      if (nowShowing.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🎬</div><h3>No movies found</h3><p>Try a different genre.</p></div>`;
+        return;
+      }
+      grid.innerHTML = nowShowing.slice(0, 8).map(m => movieCardHTML(m)).join('');
+    }
+
+    function renderComingSoon(movies) {
+      const grid = document.getElementById('comingSoonGrid');
+      const coming = movies.filter(m => m.releaseDate && new Date(m.releaseDate) > new Date());
+      if (coming.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📅</div><h3>Nothing coming soon</h3></div>`;
+        return;
+      }
+      grid.innerHTML = coming.map(m => movieCardHTML(m, true)).join('');
+    }
+
+    function movieCardHTML(movie, isSoon = false) {
+      const posterUrl = Utils.getPosterUrl(movie);
+      return `
+        <div class="movie-card" onclick="cacheMovieAndGo(movie, false)">
+          <div class="movie-poster">
+            <img src="${posterUrl}" alt="${movie.title}" loading="lazy" onerror="this.src='https://placehold.co/300x450/16161f/e50914?text=${encodeURIComponent(movie.title)}'"/>
+            ${movie.rating ? `<div class="movie-rating-chip">⭐ ${movie.rating}</div>` : ''}
+            <div class="movie-poster-overlay">
+              ${isSoon ? '<div class="badge badge-gold" style="margin-bottom:0">Coming Soon</div>' : '<button class="movie-play-btn">▶</button>'}
+            </div>
+          </div>
+          <div class="movie-info">
+            <div class="movie-title-text">${movie.title}</div>
+            <div class="movie-meta">
+              <span>${movie.genre || '—'}</span>
+              <span class="movie-meta-dot">•</span>
+              <span>${movie.language || '—'}</span>
+              <span class="movie-meta-dot">•</span>
+              <span>${movie.duration || '?'} min</span>
+            </div>
+            ${isSoon
+              ? `<span style="font-size:12px;color:var(--gold)">🗓 ${Utils.formatDate(movie.releaseDate)}</span>`
+              : `<button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="event.stopPropagation();cacheMovieAndGo(movie, false)">Book Now</button>`
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function renderHeroFilmStrip() {
+      const strip = document.getElementById('heroFilmStrip');
+      const cards = MOCK_MOVIES.slice(0, 4).map(m => `
+        <div class="film-card">
+          <img src="${Utils.getPosterUrl(m)}" alt="${m.title}" onerror="this.style.display='none'"/>
+        </div>
+      `).join('');
+      strip.innerHTML = cards;
+    }
+
+    function doHeroSearch() {
+      const q = document.getElementById('heroSearch').value.trim();
+      if (q) window.location.href = `pages/movies.html?search=${encodeURIComponent(q)}`;
+    }
+
+    document.getElementById('heroSearch').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doHeroSearch();
+    });
+  
+function cacheMovieAndGo(movie, fromPages) {
+  try {
+    sessionStorage.setItem('movieCache_' + movie.id, JSON.stringify(movie));
+  } catch(e) {}
+  window.location.href = (fromPages ? '' : 'pages/') + 'movie-detail.html?id=' + movie.id;
+}
+</script>
+</body>
+</html>

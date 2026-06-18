@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — MovieVerse</title>
+  <link rel="stylesheet" href="../css/global.css"/>
+  <style>
+    .admin-layout { display: grid; grid-template-columns: 240px 1fr; gap: 0; min-height: calc(100vh - 70px); }
+
+    /* Sidebar */
+    .admin-sidebar {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: var(--space-xl) 0;
+      position: sticky; top: 70px;
+      height: calc(100vh - 70px);
+      overflow-y: auto;
+    }
+    .sidebar-section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; padding: 0 var(--space-lg) var(--space-sm); margin-top: var(--space-lg); }
+    .sidebar-nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px var(--space-lg);
+      color: var(--text-secondary); font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: var(--transition);
+      border-left: 3px solid transparent;
+    }
+    .sidebar-nav-item:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+    .sidebar-nav-item.active { color: var(--accent); background: var(--accent-dim); border-left-color: var(--accent); }
+    .sidebar-nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+    .sidebar-badge { margin-left: auto; background: var(--accent); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+
+    /* Main */
+    .admin-main { padding: var(--space-xl); overflow: auto; }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-lg); margin-bottom: var(--space-xl); }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: var(--space-lg);
+      transition: var(--transition);
+    }
+    .stat-card:hover { border-color: var(--border-light); transform: translateY(-2px); }
+    .stat-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md); }
+    .stat-icon { font-size: 28px; width: 52px; height: 52px; background: var(--bg-elevated); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; }
+    .stat-trend { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+    .trend-up { background: rgba(34,197,94,0.12); color: var(--success); }
+    .trend-down { background: rgba(239,68,68,0.12); color: var(--error); }
+    .stat-value { font-family: var(--font-display); font-size: 36px; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .stat-label { font-size: 13px; color: var(--text-muted); }
+
+    /* Table */
+    .data-table-wrapper { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .data-table-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-lg) var(--space-xl); border-bottom: 1px solid var(--border); }
+    .data-table-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; }
+    .data-table-actions { display: flex; gap: var(--space-sm); }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 12px var(--space-lg); text-align: left; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); white-space: nowrap; }
+    td { padding: 14px var(--space-lg); font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .table-search { background: var(--bg-elevated); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; color: var(--text-primary); font-family: var(--font-body); font-size: 13px; outline: none; width: 220px; }
+    .table-search:focus { border-color: var(--accent); }
+
+    /* Movie Form Modal */
+    .modal-form { display: flex; flex-direction: column; gap: var(--space-md); }
+    .modal-form-title { font-family: var(--font-display); font-size: 24px; letter-spacing: 1px; margin-bottom: var(--space-sm); }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+
+    /* Charts placeholder */
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
+    .chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-xl); }
+    .chart-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-lg); }
+    .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+    .bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+    .bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--accent); min-height: 4px; transition: var(--transition-slow); }
+    .bar:hover { opacity: 0.8; }
+    .bar-label { font-size: 10px; color: var(--text-muted); }
+    .donut-chart { display: flex; gap: var(--space-lg); align-items: center; }
+    .donut-svg { flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+    .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .donut-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr; }
+      .admin-sidebar { display: none; }
+      .chart-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+<main class="page-wrapper">
+  <div class="admin-layout">
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-section-label">Overview</div>
+      <div class="sidebar-nav-item active" onclick="showSection('dashboard', this)"><span class="nav-icon">📊</span>Dashboard</div>
+
+      <div class="sidebar-section-label">Manage</div>
+      <div class="sidebar-nav-item" onclick="showSection('movies', this)"><span class="nav-icon">🎬</span>Movies</div>
+      <div class="sidebar-nav-item" onclick="showSection('theaters', this)"><span class="nav-icon">🏛</span>Theaters</div>
+      <div class="sidebar-nav-item" onclick="showSection('shows', this)"><span class="nav-icon">📅</span>Shows</div>
+
+      <div class="sidebar-section-label">Operations</div>
+      <div class="sidebar-nav-item" onclick="showSection('bookings', this)">
+        <span class="nav-icon">🎟️</span>Bookings
+        <span class="sidebar-badge" id="pendingBadge">4</span>
+      </div>
+      <div class="sidebar-nav-item" onclick="showSection('users', this)"><span class="nav-icon">👥</span>Users</div>
+      <div class="sidebar-nav-item" onclick="showSection('payments', this)"><span class="nav-icon">💳</span>Payments</div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-main">
+
+      <!-- DASHBOARD -->
+      <div class="admin-section active" id="section-dashboard">
+        <div class="page-header" style="padding-top:0">
+          <h1 class="page-title">DASHBOARD</h1>
+          <p class="page-subtitle">Welcome back, Admin! Here's what's happening.</p>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-top"><div class="stat-icon">🎟️</div><span class="stat-trend trend-up">↑ 12%</span></div>
+            <div class="stat-value" id="statBookings">248</div>
+            <div class="stat-label">Total Bookings</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-top"><div class="stat-icon">💰</div><span class="stat-trend trend-up">↑ 8%</span></div>
+            <div class="stat-value" id="statRevenue">₹1.8L</div>
+            <div class="stat-label">Total Revenue</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-top"><div class="stat-icon">👥</div><span class="stat-trend trend-up">↑ 23%</span></div>
+            <div class="stat-value" id="statUsers">1,240</div>
+            <div class="stat-label">Registered Users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-top"><div class="stat-icon">🎬</div><span class="stat-trend trend-down">↓ 2</span></div>
+            <div class="stat-value" id="statMovies">42</div>
+            <div class="stat-label">Active Movies</div>
+          </div>
+        </div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Weekly Bookings</div>
+            <div class="bar-chart" id="weeklyChart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Revenue by Genre</div>
+            <div class="donut-chart">
+              <svg class="donut-svg" viewBox="0 0 80 80" width="100" height="100">
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#1c1c28" stroke-width="14"/>
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#e50914" stroke-width="14" stroke-dasharray="75 113" stroke-dashoffset="0" transform="rotate(-90 40 40)"/>
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#f5c518" stroke-width="14" stroke-dasharray="45 143" stroke-dashoffset="-75" transform="rotate(-90 40 40)"/>
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#3b82f6" stroke-width="14" stroke-dasharray="28 160" stroke-dashoffset="-120" transform="rotate(-90 40 40)"/>
+                <circle cx="40" cy="40" r="30" fill="none" stroke="#22c55e" stroke-width="14" stroke-dasharray="40 148" stroke-dashoffset="-148" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="donut-legend">
+                <div class="donut-legend-item"><div class="donut-dot" style="background:#e50914"></div><span>Action — 40%</span></div>
+                <div class="donut-legend-item"><div class="donut-dot" style="background:#f5c518"></div><span>Sci-Fi — 24%</span></div>
+                <div class="donut-legend-item"><div class="donut-dot" style="background:#3b82f6"></div><span>Drama — 15%</span></div>
+                <div class="donut-legend-item"><div class="donut-dot" style="background:#22c55e"></div><span>Others — 21%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Recent Bookings preview -->
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <span class="data-table-title">RECENT BOOKINGS</span>
+            <button class="btn btn-ghost btn-sm" onclick="showSection('bookings', document.querySelector('[onclick*=bookings]'))">View All →</button>
+          </div>
+          <div style="overflow-x:auto" id="recentBookingsTable"></div>
+        </div>
+      </div>
+
+      <!-- MOVIES -->
+      <div class="admin-section" id="section-movies">
+        <div class="page-header" style="padding-top:0">
+          <h1 class="page-title">MOVIES</h1>
+        </div>
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <span class="data-table-title">ALL MOVIES</span>
+            <div class="data-table-actions">
+              <input type="text" class="table-search" placeholder="Search movies..." oninput="filterTable('moviesTable', this.value)"/>
+              <button class="btn btn-primary btn-sm" onclick="openAddMovieModal()">+ Add Movie</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto" id="moviesTable"></div>
+        </div>
+      </div>
+
+      <!-- THEATERS -->
+      <div class="admin-section" id="section-theaters">
+        <div class="page-header" style="padding-top:0"><h1 class="page-title">THEATERS</h1></div>
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <span class="data-table-title">ALL THEATERS</span>
+            <div class="data-table-actions">
+              <input type="text" class="table-search" placeholder="Search..." oninput="filterTable('theatersTable', this.value)"/>
+              <button class="btn btn-primary btn-sm" onclick="Toast.info('Theater form coming soon')">+ Add Theater</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto" id="theatersTable"></div>
+        </div>
+      </div>
+
+      <!-- SHOWS -->
+      <div class="admin-section" id="section-shows">
+        <div class="page-header" style="padding-top:0"><h1 class="page-title">SHOWS</h1></div>
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <span class="data-table-title">ALL SHOWS</span>
+            <div class="data-table-actions">
+              <input type="text" class="table-search" placeholder="Search..." oninput="filterTable('showsTable', this.value)"/>
+              <button class="btn btn-primary btn-sm" onclick="Toast.info('Show form coming soon')">+ Add Show</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto" id="showsTable"></div>
+        </div>
+      </div>
+
+      <!-- BOOKINGS -->
+      <div class="admin-section" id="section-bookings">
+        <div class="page-header" style="padding-top:0"><h1 class="page-title">BOOKINGS</h1></div>
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <span class="data-table-title">ALL BOOKINGS</span>
+            <input type="text" class="table-search" placeholder="Search booking..." oninput="filterTable('bookingsTable', this.value)"/>
+          </div>
+          <div style="overflow-x:auto" id="bookingsTable"></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="admin-section" id="section-users">
+        <div class="page-header" style="padding-top:0"><h1 class="page-title">USERS</h1></div>
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <span class="data-table-title">REGISTERED USERS</span>
+            <input type="text" class="table-search" placeholder="Search users..." oninput="filterTable('usersTable', this.value)"/>
+          </div>
+          <div style="overflow-x:auto" id="usersTable"></div>
+        </div>
+      </div>
+
+      <!-- PAYMENTS -->
+      <div class="admin-section" id="section-payments">
+        <div class="page-header" style="padding-top:0"><h1 class="page-title">PAYMENTS</h1></div>
+        <div class="data-table-wrapper">
+          <div class="data-table-header">
+            <span class="data-table-title">PAYMENT TRANSACTIONS</span>
+            <input type="text" class="table-search" placeholder="Search TXN..." oninput="filterTable('paymentsTable', this.value)"/>
+          </div>
+          <div style="overflow-x:auto" id="paymentsTable"></div>
+        </div>
+      </div>
+
+    </div><!-- /admin-main -->
+  </div>
+</main>
+
+<!-- Add Movie Modal -->
+<div id="addMovieModal" style="display:none">
+  <div class="modal-backdrop" onclick="closeMovieModal()">
+    <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+      <div class="modal-form">
+        <div class="modal-form-title">ADD MOVIE</div>
+        <div class="form-group"><label class="form-label">Title *</label><input type="text" class="form-input" id="mTitle" placeholder="Movie title"/></div>
+        <div class="form-row-2">
+          <div class="form-group"><label class="form-label">Genre *</label>
+            <select class="form-input" id="mGenre"><option>Action</option><option>Drama</option><option>Sci-Fi</option><option>Romance</option><option>Horror</option><option>Thriller</option><option>Comedy</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Language *</label>
+            <select class="form-input" id="mLang"><option>English</option><option>Hindi</option><option>Tamil</option><option>Telugu</option></select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label class="form-label">Duration (min)</label><input type="number" class="form-input" id="mDuration" placeholder="120"/></div>
+          <div class="form-group"><label class="form-label">Release Date</label><input type="date" class="form-input" id="mRelease"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="mDesc" rows="3" placeholder="Movie description..." style="resize:vertical"></textarea></div>
+        <div class="form-group"><label class="form-label">Poster URL</label><input type="url" class="form-input" id="mPoster" placeholder="https://..."/></div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-ghost" onclick="closeMovieModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveMovie()">Save Movie</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="footer-placeholder"></div>
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script>
+// Require admin access
+if (!Auth.isLoggedIn()) { window.location.href='login.html'; }
+
+const MOCK_MOVIES = [
+  {id:1,title:'Galactic Storm',genre:'Sci-Fi',language:'English',duration:148,releaseDate:'2025-02-15',rating:8.4},
+  {id:2,title:'Shadow Protocol',genre:'Action',language:'English',duration:124,releaseDate:'2025-01-20',rating:7.9},
+  {id:3,title:'Neon Requiem',genre:'Thriller',language:'English',duration:135,releaseDate:'2025-01-10',rating:8.1},
+  {id:4,title:'Dil Ka Safar',genre:'Romance',language:'Hindi',duration:158,releaseDate:'2025-02-01',rating:7.6},
+  {id:5,title:'Iron Fist Rising',genre:'Action',language:'English',duration:142,releaseDate:'2024-12-05',rating:8.0},
+];
+const MOCK_THEATERS = [
+  {id:1,theaterName:'PVR Cinemas',city:'Delhi',address:'Connaught Place, New Delhi',screens:4,totalSeats:720},
+  {id:2,theaterName:'INOX Multiplex',city:'Delhi',address:'Select Citywalk, Saket',screens:3,totalSeats:540},
+  {id:3,theaterName:'Cinepolis',city:'Mumbai',address:'DLF Mall, Andheri',screens:5,totalSeats:900},
+];
+const MOCK_SHOWS = [
+  {id:101,movieTitle:'Galactic Storm',theaterName:'PVR Cinemas',showTime:'2025-06-01T10:00',ticketPrice:250,availableSeats:80},
+  {id:102,movieTitle:'Shadow Protocol',theaterName:'INOX Multiplex',showTime:'2025-06-01T14:00',ticketPrice:300,availableSeats:60},
+  {id:103,movieTitle:'Neon Requiem',theaterName:'Cinepolis',showTime:'2025-06-02T18:00',ticketPrice:280,availableSeats:95},
+];
+const MOCK_BOOKINGS = [
+  {id:'BK001',userId:1,userName:'Rahul Sharma',movieTitle:'Galactic Storm',showTime:'2025-05-20T18:00',seats:['F5','F6'],totalAmount:1085,bookingStatus:'CONFIRMED',bookingTime:'2025-05-18T10:30'},
+  {id:'BK002',userId:2,userName:'Priya Nair',movieTitle:'Shadow Protocol',showTime:'2025-05-25T13:30',seats:['C9'],totalAmount:315,bookingStatus:'CONFIRMED',bookingTime:'2025-05-20T15:00'},
+  {id:'BK003',userId:3,userName:'Arjun Das',movieTitle:'Neon Requiem',showTime:'2025-04-12T21:00',seats:['H3','H4'],totalAmount:630,bookingStatus:'CANCELLED',bookingTime:'2025-04-10T09:15'},
+  {id:'BK004',userId:1,userName:'Rahul Sharma',movieTitle:'Dil Ka Safar',showTime:'2025-06-05T16:00',seats:['D4'],totalAmount:315,bookingStatus:'PENDING',bookingTime:'2025-06-03T11:00'},
+];
+const MOCK_USERS = [
+  {id:1,fullName:'Rahul Sharma',email:'rahul@demo.com',role:'USER',createdAt:'2025-01-10',bookings:3},
+  {id:2,fullName:'Priya Nair',email:'priya@demo.com',role:'USER',createdAt:'2025-02-14',bookings:1},
+  {id:3,fullName:'Arjun Das',email:'arjun@demo.com',role:'USER',createdAt:'2025-03-01',bookings:2},
+  {id:4,fullName:'Admin User',email:'admin@demo.com',role:'ADMIN',createdAt:'2025-01-01',bookings:0},
+];
+const MOCK_PAYMENTS = [
+  {id:'TXN8823',bookingId:'BK001',amount:1085,method:'card',status:'SUCCESS',createdAt:'2025-05-18T10:32'},
+  {id:'TXN9901',bookingId:'BK002',amount:315,method:'upi',status:'SUCCESS',createdAt:'2025-05-20T15:02'},
+  {id:'TXN7712',bookingId:'BK003',amount:630,method:'card',status:'REFUNDED',createdAt:'2025-04-10T09:18'},
+  {id:'TXN0055',bookingId:'BK004',amount:315,method:'netbanking',status:'PENDING',createdAt:'2025-06-03T11:01'},
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderNavbar('admin');
+  renderFooter();
+  loadDashboard();
+  loadMoviesTable();
+  loadTheatersTable();
+  loadShowsTable();
+  loadBookingsTable();
+  loadUsersTable();
+  loadPaymentsTable();
+  renderWeeklyChart();
+});
+
+function showSection(name, el) {
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('section-'+name)?.classList.add('active');
+  el?.classList.add('active');
+}
+
+function renderWeeklyChart() {
+  const data = [32,45,28,60,72,55,48];
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const max = Math.max(...data);
+  const el = document.getElementById('weeklyChart');
+  if (!el) return;
+  el.innerHTML = data.map((v,i) => `
+    <div class="bar-item">
+      <div class="bar" style="height:${(v/max)*100}%" title="${v} bookings"></div>
+      <span class="bar-label">${days[i]}</span>
+    </div>
+  `).join('');
+}
+
+function loadDashboard() {
+  document.getElementById('recentBookingsTable').innerHTML = buildBookingTable(MOCK_BOOKINGS.slice(0,4), false);
+}
+
+function loadMoviesTable() {
+  document.getElementById('moviesTable').innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>Title</th><th>Genre</th><th>Language</th><th>Duration</th><th>Release</th><th>Rating</th><th>Actions</th></tr></thead>
+      <tbody>${MOCK_MOVIES.map(m=>`
+        <tr>
+          <td style="color:var(--text-muted);font-family:var(--font-mono)">${m.id}</td>
+          <td><strong>${m.title}</strong></td>
+          <td><span class="badge badge-gray">${m.genre}</span></td>
+          <td>${m.language}</td>
+          <td>${m.duration} min</td>
+          <td>${Utils.formatDate(m.releaseDate)}</td>
+          <td><span class="badge badge-gold">⭐ ${m.rating}</span></td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="Toast.info('Edit: ${m.title}')">✏</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="deleteMovie(${m.id},'${m.title}')">🗑</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function loadTheatersTable() {
+  document.getElementById('theatersTable').innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>Theater Name</th><th>City</th><th>Address</th><th>Screens</th><th>Total Seats</th><th>Actions</th></tr></thead>
+      <tbody>${MOCK_THEATERS.map(t=>`
+        <tr>
+          <td style="color:var(--text-muted);font-family:var(--font-mono)">${t.id}</td>
+          <td><strong>${t.theaterName}</strong></td>
+          <td>${t.city}</td>
+          <td style="color:var(--text-muted)">${t.address}</td>
+          <td>${t.screens}</td>
+          <td>${t.totalSeats}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="Toast.info('Edit theater')">✏</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function loadShowsTable() {
+  document.getElementById('showsTable').innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>Movie</th><th>Theater</th><th>Show Time</th><th>Price</th><th>Available</th><th>Actions</th></tr></thead>
+      <tbody>${MOCK_SHOWS.map(s=>`
+        <tr>
+          <td style="color:var(--text-muted);font-family:var(--font-mono)">${s.id}</td>
+          <td><strong>${s.movieTitle}</strong></td>
+          <td>${s.theaterName}</td>
+          <td>${Utils.formatDateTime(s.showTime)}</td>
+          <td style="color:var(--accent);font-weight:600">${Utils.formatCurrency(s.ticketPrice)}</td>
+          <td><span class="badge badge-green">${s.availableSeats} seats</span></td>
+          <td><button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="Toast.warning('Delete show?')">🗑</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function loadBookingsTable() {
+  document.getElementById('bookingsTable').innerHTML = buildBookingTable(MOCK_BOOKINGS, true);
+}
+
+function buildBookingTable(bookings, showActions) {
+  return `<table>
+    <thead><tr><th>Booking ID</th><th>User</th><th>Movie</th><th>Show Time</th><th>Seats</th><th>Amount</th><th>Status</th>${showActions?'<th>Actions</th>':''}</tr></thead>
+    <tbody>${bookings.map(b=>`
+      <tr>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${b.id}</td>
+        <td>${b.userName||'—'}</td>
+        <td><strong>${b.movieTitle}</strong></td>
+        <td style="font-size:13px">${Utils.formatDateTime(b.showTime)}</td>
+        <td>${(b.seats||[]).map(s=>`<span class="badge badge-gray" style="font-family:var(--font-mono);font-size:10px">${s}</span>`).join(' ')}</td>
+        <td style="font-weight:600;color:var(--text-primary)">${Utils.formatCurrency(b.totalAmount)}</td>
+        <td><span class="badge ${Utils.getStatusBadge(b.bookingStatus)}">${b.bookingStatus}</span></td>
+        ${showActions?`<td><button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="Toast.info('Booking details: ${b.id}')">View</button></td>`:''}
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function loadUsersTable() {
+  document.getElementById('usersTable').innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Bookings</th><th>Actions</th></tr></thead>
+      <tbody>${MOCK_USERS.map(u=>`
+        <tr>
+          <td style="color:var(--text-muted)">${u.id}</td>
+          <td><strong>${u.fullName}</strong></td>
+          <td style="color:var(--text-muted)">${u.email}</td>
+          <td><span class="badge ${u.role==='ADMIN'?'badge-red':'badge-blue'}">${u.role}</span></td>
+          <td>${Utils.formatDate(u.createdAt)}</td>
+          <td>${u.bookings}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="Toast.info('View user: ${u.fullName}')">View</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function loadPaymentsTable() {
+  document.getElementById('paymentsTable').innerHTML = `
+    <table>
+      <thead><tr><th>TXN ID</th><th>Booking ID</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>${MOCK_PAYMENTS.map(p=>`
+        <tr>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${p.id}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${p.bookingId}</td>
+          <td style="font-weight:600">${Utils.formatCurrency(p.amount)}</td>
+          <td><span class="badge badge-gray">${p.method}</span></td>
+          <td><span class="badge ${Utils.getStatusBadge(p.status)}">${p.status}</span></td>
+          <td style="font-size:13px;color:var(--text-muted)">${Utils.formatDateTime(p.createdAt)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function filterTable(tableId, query) {
+  const q = query.toLowerCase();
+  const rows = document.querySelectorAll(`#${tableId} table tbody tr`);
+  rows.forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function openAddMovieModal() { document.getElementById('addMovieModal').style.display='block'; }
+function closeMovieModal() { document.getElementById('addMovieModal').style.display='none'; }
+
+async function saveMovie() {
+  const title = document.getElementById('mTitle').value.trim();
+  if (!title) { Toast.error('Title is required'); return; }
+  const movie = {
+    title, genre: document.getElementById('mGenre').value,
+    language: document.getElementById('mLang').value,
+    duration: parseInt(document.getElementById('mDuration').value)||120,
+    releaseDate: document.getElementById('mRelease').value,
+    description: document.getElementById('mDesc').value,
+    posterUrl: document.getElementById('mPoster').value,
+  };
+  try { await API.movies.create(movie); } catch {}
+  MOCK_MOVIES.push({ ...movie, id: MOCK_MOVIES.length+1, rating: 0 });
+  loadMoviesTable();
+  closeMovieModal();
+  Toast.success(`Movie "${title}" added successfully!`);
+}
+
+function deleteMovie(id, title) {
+  if (!confirm(`Delete "${title}"?`)) return;
+  try { API.movies.delete(id); } catch {}
+  const idx = MOCK_MOVIES.findIndex(m=>m.id===id);
+  if (idx>=0) MOCK_MOVIES.splice(idx,1);
+  loadMoviesTable();
+  Toast.success(`"${title}" deleted.`);
+}
+</script>
+</body>
+</html>

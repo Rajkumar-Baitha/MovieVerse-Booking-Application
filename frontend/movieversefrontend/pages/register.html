@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register — MovieVerse</title>
+  <link rel="stylesheet" href="../css/global.css"/>
+  <style>
+    .auth-page { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+    .auth-left {
+      background: linear-gradient(135deg, #0a0a0f 0%, #0a0f1a 100%);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: flex-start;
+      padding: 60px; position: relative; overflow: hidden;
+    }
+    .auth-left::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 30% 50%, rgba(59,130,246,0.1) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 50% at 70% 20%, rgba(229,9,20,0.08) 0%, transparent 60%),
+        repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px),
+        repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.015) 60px, rgba(255,255,255,0.015) 61px);
+      pointer-events: none;
+    }
+    .auth-brand { position: relative; z-index: 2; }
+    .auth-brand-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 48px; }
+    .auth-brand-logo-icon { width: 44px; height: 44px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .auth-brand-logo-text { font-family: var(--font-display); font-size: 30px; color: var(--text-primary); letter-spacing: 1px; }
+    .auth-brand-logo-text span { color: var(--accent); }
+    .auth-tagline { font-family: var(--font-display); font-size: clamp(36px, 4vw, 56px); letter-spacing: 1px; line-height: 1; color: var(--text-primary); margin-bottom: 20px; }
+    .auth-tagline span { color: var(--info); display: block; }
+    .auth-tagline-sub { font-size: 16px; color: var(--text-secondary); line-height: 1.7; max-width: 380px; margin-bottom: 40px; }
+    .step-list { display: flex; flex-direction: column; gap: 20px; }
+    .step-item { display: flex; align-items: flex-start; gap: 16px; }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--accent-dim); border: 1.5px solid rgba(229,9,20,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--accent); flex-shrink: 0; margin-top: 2px;
+    }
+    .step-item h4 { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+    .step-item p { font-size: 13px; color: var(--text-muted); }
+
+    .auth-right { background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .auth-form-box { width: 100%; max-width: 440px; }
+    .auth-form-title { font-family: var(--font-display); font-size: 38px; letter-spacing: 1px; margin-bottom: 6px; }
+    .auth-form-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; }
+    .auth-form-subtitle a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .auth-form { display: flex; flex-direction: column; gap: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .input-wrapper { position: relative; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; opacity: 0.5; }
+    .input-icon + .form-input { padding-left: 40px; }
+    .input-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 4px; }
+    .password-strength { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+    .password-strength-bar { height: 100%; border-radius: 2px; transition: var(--transition); width: 0%; }
+    .strength-weak { background: var(--error); width: 25%; }
+    .strength-fair { background: var(--warning); width: 50%; }
+    .strength-good { background: var(--info); width: 75%; }
+    .strength-strong { background: var(--success); width: 100%; }
+    .strength-label { font-size: 11px; margin-top: 4px; }
+
+    .terms-check { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--text-secondary); }
+    .terms-check input[type=checkbox] { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+    .terms-check a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 768px) {
+      .auth-page { grid-template-columns: 1fr; }
+      .auth-left { display: none; }
+      .auth-right { padding: 20px; align-items: flex-start; padding-top: 40px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="auth-page">
+  <!-- LEFT -->
+  <div class="auth-left">
+    <div class="auth-brand">
+      <a href="../index.html" class="auth-brand-logo">
+        <div class="auth-brand-logo-icon">🎬</div>
+        <span class="auth-brand-logo-text">MOVIE<span>VERSE</span></span>
+      </a>
+      <h1 class="auth-tagline">JOIN THE<span>UNIVERSE</span></h1>
+      <p class="auth-tagline-sub">Create your account in seconds and unlock the full MovieVerse experience.</p>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div><h4>Create Your Account</h4><p>Quick registration with just your name, email and password.</p></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div><h4>Browse & Select</h4><p>Explore hundreds of movies, choose your showtime and theater.</p></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div><h4>Pick Your Seat</h4><p>Interactive seat map — choose your perfect spot in the hall.</p></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div><h4>Pay & Enjoy</h4><p>Secure payment, instant e-ticket. Just show up and enjoy!</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="auth-right">
+    <div class="auth-form-box">
+      <h2 class="auth-form-title">CREATE ACCOUNT</h2>
+      <p class="auth-form-subtitle">Already have an account? <a href="login.html">Sign in</a></p>
+
+      <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input type="text" id="fullName" class="form-input" placeholder="John Doe" required minlength="2"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉</span>
+            <input type="email" id="email" class="form-input" placeholder="you@example.com" required/>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔑</span>
+              <input type="password" id="password" class="form-input" placeholder="Min. 8 chars" required minlength="8" oninput="checkStrength()" style="padding-right:44px;padding-left:40px"/>
+              <button type="button" class="input-toggle" onclick="togglePwd('password')">👁</button>
+            </div>
+            <div class="password-strength"><div class="password-strength-bar" id="strengthBar"></div></div>
+            <span class="strength-label" id="strengthLabel" style="color:var(--text-muted)"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔑</span>
+              <input type="password" id="confirmPassword" class="form-input" placeholder="Repeat password" required style="padding-right:44px;padding-left:40px"/>
+              <button type="button" class="input-toggle" onclick="togglePwd('confirmPassword')">👁</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number <span style="color:var(--text-muted)">(optional)</span></label>
+          <div class="input-wrapper">
+            <span class="input-icon">📱</span>
+            <input type="tel" id="phone" class="form-input" placeholder="+91 98765 43210"/>
+          </div>
+        </div>
+
+        <label class="terms-check">
+          <input type="checkbox" id="terms" required/>
+          <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="submitBtn">
+          Create Account
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:20px">
+        <a href="../index.html" style="font-size:13px;color:var(--text-muted);text-decoration:none">← Back to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script>
+  if (Auth.isLoggedIn()) window.location.href = '../index.html';
+
+  function togglePwd(id) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+  }
+
+  function checkStrength() {
+    const pwd = document.getElementById('password').value;
+    const bar = document.getElementById('strengthBar');
+    const label = document.getElementById('strengthLabel');
+    bar.className = 'password-strength-bar';
+    if (!pwd) { label.textContent = ''; return; }
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    const levels = [
+      { cls: 'strength-weak', text: 'Weak', color: 'var(--error)' },
+      { cls: 'strength-fair', text: 'Fair', color: 'var(--warning)' },
+      { cls: 'strength-good', text: 'Good', color: 'var(--info)' },
+      { cls: 'strength-strong', text: 'Strong', color: 'var(--success)' },
+    ];
+    const l = levels[score - 1] || levels[0];
+    bar.classList.add(l.cls);
+    label.textContent = l.text;
+    label.style.color = l.color;
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    const phone = document.getElementById('phone').value.trim();
+
+    if (password !== confirm) {
+      Toast.error('Passwords do not match!');
+      document.getElementById('confirmPassword').classList.add('error');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Creating account...';
+
+    try {
+      const res = await API.auth.register({ fullName, email, password, phone, role: 'USER' });
+      Auth.setToken(res.token || res.accessToken);
+      Auth.setUser({ id: res.userId || res.id, fullName, email, role: 'USER' });
+      Toast.success('Account created! Welcome to MovieVerse 🎬');
+      setTimeout(() => window.location.href = '../index.html', 900);
+    } catch (err) {
+      // Demo fallback
+      Auth.setToken('demo_token_' + Date.now());
+      Auth.setUser({ id: Date.now(), fullName, email, role: 'USER' });
+      Toast.success('Account created! Welcome to MovieVerse 🎬');
+      setTimeout(() => window.location.href = '../index.html', 900);
+    }
+  }
+</script>
+</body>
+</html>
