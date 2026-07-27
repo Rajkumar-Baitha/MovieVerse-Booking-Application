@@ -199,6 +199,8 @@ function saveBookingLocally(booking) {
     // Build a proper booking object
     const newBooking = {
       id: booking.bookingId || ('BK' + Date.now()),
+      userId: user?.id || 1,
+      userName: user?.fullName || 'Rahul Sharma',
       movieTitle: booking.movieTitle || 'Movie',
       theaterName: booking.theaterName || 'Theater',
       city: booking.city || '',
@@ -213,11 +215,38 @@ function saveBookingLocally(booking) {
       paymentMethod: booking.paymentMethod || 'card',
     };
     
-    // Avoid duplicates
+    // 1. Save to User Bookings
     const alreadyExists = existing.some(b => b.id === newBooking.id || b.transactionId === newBooking.transactionId);
     if (!alreadyExists) {
-      existing.unshift(newBooking); // add to start
+      existing.unshift(newBooking);
       localStorage.setItem(key, JSON.stringify(existing));
+    }
+
+    // 2. Save to Admin Bookings Store
+    const adminBookingsKey = 'mv_admin_bookings';
+    const adminBookings = JSON.parse(localStorage.getItem(adminBookingsKey) || '[]');
+    if (!adminBookings.some(b => b.id === newBooking.id)) {
+      adminBookings.unshift(newBooking);
+      localStorage.setItem(adminBookingsKey, JSON.stringify(adminBookings));
+    }
+
+    // 3. Save to Admin Payments Store
+    const adminPaymentsKey = 'mv_admin_payments';
+    const adminPayments = JSON.parse(localStorage.getItem(adminPaymentsKey) || '[]');
+    const newPayment = {
+      id: newBooking.transactionId,
+      transactionId: newBooking.transactionId,
+      bookingId: newBooking.id,
+      amount: newBooking.totalAmount,
+      paymentMethod: newBooking.paymentMethod,
+      method: newBooking.paymentMethod,
+      paymentStatus: 'SUCCESS',
+      status: 'SUCCESS',
+      createdAt: newBooking.bookingTime
+    };
+    if (!adminPayments.some(p => (p.id || p.transactionId) === newPayment.id)) {
+      adminPayments.unshift(newPayment);
+      localStorage.setItem(adminPaymentsKey, JSON.stringify(adminPayments));
     }
   } catch(e) {
     console.error('Failed to save booking locally:', e);

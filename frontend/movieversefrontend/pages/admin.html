@@ -206,7 +206,7 @@
             <span class="data-table-title">ALL THEATERS</span>
             <div class="data-table-actions">
               <input type="text" class="table-search" placeholder="Search..." oninput="filterTable('theatersTable', this.value)"/>
-              <button class="btn btn-primary btn-sm" onclick="Toast.info('Theater form coming soon')">+ Add Theater</button>
+              <button class="btn btn-primary btn-sm" onclick="openAddTheaterModal()">+ Add Theater</button>
             </div>
           </div>
           <div style="overflow-x:auto" id="theatersTable"></div>
@@ -221,7 +221,7 @@
             <span class="data-table-title">ALL SHOWS</span>
             <div class="data-table-actions">
               <input type="text" class="table-search" placeholder="Search..." oninput="filterTable('showsTable', this.value)"/>
-              <button class="btn btn-primary btn-sm" onclick="Toast.info('Show form coming soon')">+ Add Show</button>
+              <button class="btn btn-primary btn-sm" onclick="openAddShowModal()">+ Add Show</button>
             </div>
           </div>
           <div style="overflow-x:auto" id="showsTable"></div>
@@ -268,12 +268,12 @@
   </div>
 </main>
 
-<!-- Add Movie Modal -->
+<!-- Add / Edit Movie Modal -->
 <div id="addMovieModal" style="display:none">
   <div class="modal-backdrop" onclick="closeMovieModal()">
     <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
       <div class="modal-form">
-        <div class="modal-form-title">ADD MOVIE</div>
+        <div class="modal-form-title" id="modalFormTitle">ADD MOVIE</div>
         <div class="form-group"><label class="form-label">Title *</label><input type="text" class="form-input" id="mTitle" placeholder="Movie title"/></div>
         <div class="form-row-2">
           <div class="form-group"><label class="form-label">Genre *</label>
@@ -298,42 +298,152 @@
   </div>
 </div>
 
+<!-- Add / Edit Theater Modal -->
+<div id="addTheaterModal" style="display:none">
+  <div class="modal-backdrop" onclick="closeTheaterModal()">
+    <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+      <div class="modal-form">
+        <div class="modal-form-title" id="theaterModalTitle">ADD THEATER</div>
+        <div class="form-group"><label class="form-label">Theater Name *</label><input type="text" class="form-input" id="tName" placeholder="e.g. PVR Cinemas"/></div>
+        <div class="form-row-2">
+          <div class="form-group"><label class="form-label">City *</label><input type="text" class="form-input" id="tCity" placeholder="e.g. Delhi"/></div>
+          <div class="form-group"><label class="form-label">Screens</label><input type="number" class="form-input" id="tScreens" placeholder="4"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="tAddress" placeholder="Full address..."/></div>
+        <div class="form-group"><label class="form-label">Total Seats</label><input type="number" class="form-input" id="tSeats" placeholder="500"/></div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-ghost" onclick="closeTheaterModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveTheater()">Save Theater</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Show Modal -->
+<div id="addShowModal" style="display:none">
+  <div class="modal-backdrop" onclick="closeShowModal()">
+    <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+      <div class="modal-form">
+        <div class="modal-form-title" id="showModalTitle">ADD SHOW</div>
+        <div class="form-group"><label class="form-label">Movie *</label><select class="form-input" id="sMovieId"></select></div>
+        <div class="form-group"><label class="form-label">Theater *</label><select class="form-input" id="sTheaterId"></select></div>
+        <div class="form-row-2">
+          <div class="form-group"><label class="form-label">Show Time *</label><input type="datetime-local" class="form-input" id="sShowTime"/></div>
+          <div class="form-group"><label class="form-label">Ticket Price (₹) *</label><input type="number" class="form-input" id="sPrice" placeholder="250"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Available Seats</label><input type="number" class="form-input" id="sAvailableSeats" placeholder="100"/></div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-ghost" onclick="closeShowModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveShow()">Save Show</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Booking Modal -->
+<div id="editBookingModal" style="display:none">
+  <div class="modal-backdrop" onclick="closeBookingModal()">
+    <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+      <div class="modal-form">
+        <div class="modal-form-title">EDIT BOOKING STATUS</div>
+        <div class="form-group"><label class="form-label">Booking ID</label><input type="text" class="form-input" id="bIdDisplay" readonly style="opacity:0.7"/></div>
+        <div class="form-group"><label class="form-label">Status *</label>
+          <select class="form-input" id="bStatus">
+            <option value="CONFIRMED">CONFIRMED</option>
+            <option value="PENDING">PENDING</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-ghost" onclick="closeBookingModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveBookingStatus()">Update Status</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" style="display:none">
+  <div class="modal-backdrop" onclick="closeUserModal()">
+    <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+      <div class="modal-form">
+        <div class="modal-form-title" id="userModalTitle">EDIT USER</div>
+        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-input" id="uName" placeholder="Full name"/></div>
+        <div class="form-group"><label class="form-label">Email *</label><input type="email" class="form-input" id="uEmail" placeholder="User email"/></div>
+        <div class="form-group"><label class="form-label">Role *</label>
+          <select class="form-input" id="uRole">
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-ghost" onclick="closeUserModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="footer-placeholder"></div>
 <div id="toast-container"></div>
-<script src="../js/api.js"></script>
+<script src="../js/api.js?v=2"></script>
 <script>
 // Require admin access
 if (!Auth.isLoggedIn()) { window.location.href='login.html'; }
 
 const MOCK_MOVIES = [
-  {id:1,title:'Galactic Storm',genre:'Sci-Fi',language:'English',duration:148,releaseDate:'2025-02-15',rating:8.4},
-  {id:2,title:'Shadow Protocol',genre:'Action',language:'English',duration:124,releaseDate:'2025-01-20',rating:7.9},
-  {id:3,title:'Neon Requiem',genre:'Thriller',language:'English',duration:135,releaseDate:'2025-01-10',rating:8.1},
-  {id:4,title:'Dil Ka Safar',genre:'Romance',language:'Hindi',duration:158,releaseDate:'2025-02-01',rating:7.6},
-  {id:5,title:'Iron Fist Rising',genre:'Action',language:'English',duration:142,releaseDate:'2024-12-05',rating:8.0},
+  { id: 1, title: 'Interstellar', genre: 'Sci-Fi', language: 'English', duration: 169, releaseDate: '2014-11-07', rating: 8.7, description: 'When Earth becomes uninhabitable, a team of ex-NASA pilots travels through a wormhole to find a new home for humanity.', director: 'Christopher Nolan', cast: [{name:'Matthew McConaughey',role:'Cooper'},{name:'Anne Hathaway',role:'Brand'}], posterUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400' },
+  { id: 2, title: 'The Dark Knight', genre: 'Action', language: 'English', duration: 152, releaseDate: '2008-07-18', rating: 9.0, description: 'Batman faces his greatest psychological and physical test when the Joker emerges to unleash chaos on Gotham City.', director: 'Christopher Nolan', cast: [{name:'Christian Bale',role:'Bruce Wayne'},{name:'Heath Ledger',role:'Joker'}], posterUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400' },
+  { id: 3, title: 'Dangal', genre: 'Drama', language: 'Hindi', duration: 161, releaseDate: '2016-12-23', rating: 8.3, description: 'Former wrestler Mahavir Singh Phogat trains his daughters Geeta and Babita to become world-class wrestlers for India.', director: 'Nitesh Tiwari', cast: [{name:'Aamir Khan',role:'Mahavir Phogat'},{name:'Fatima Sana Shaikh',role:'Geeta Phogat'}], posterUrl: 'https://images.unsplash.com/photo-1517649763962-0c623266010b?w=400' },
+  { id: 4, title: 'RRR', genre: 'Action', language: 'Telugu', duration: 187, releaseDate: '2022-03-25', rating: 7.8, description: 'A legendary revolutionary and an officer in British India join forces in a fearless fight against tyrannical rulers.', director: 'S.S. Rajamouli', cast: [{name:'N.T. Rama Rao Jr.',role:'Bheem'},{name:'Ram Charan',role:'Alluri Sitarama Raju'}], posterUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400' },
+  { id: 5, title: 'Inception', genre: 'Sci-Fi', language: 'English', duration: 148, releaseDate: '2010-07-16', rating: 8.8, description: 'A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into a CEO\'s mind.', director: 'Christopher Nolan', cast: [{name:'Leonardo DiCaprio',role:'Cobb'},{name:'Joseph Gordon-Levitt',role:'Arthur'}], posterUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400' },
+  { id: 6, title: 'Avengers: Endgame', genre: 'Action', language: 'English', duration: 181, releaseDate: '2019-04-26', rating: 8.4, description: 'After the devastating events of Infinity War, the universe is in ruins. The remaining Avengers assemble once more to reverse Thanos\' actions.', director: 'Anthony Russo, Joe Russo', cast: [{name:'Robert Downey Jr.',role:'Iron Man'},{name:'Chris Evans',role:'Captain America'}], posterUrl: 'https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=400' },
+  { id: 7, title: 'Oppenheimer', genre: 'Drama', language: 'English', duration: 180, releaseDate: '2023-07-21', rating: 8.9, description: 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II.', director: 'Christopher Nolan', cast: [{name:'Cillian Murphy',role:'J. Robert Oppenheimer'},{name:'Emily Blunt',role:'Katherine Oppenheimer'}], posterUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=400' },
+  { id: 8, title: 'Stree 2', genre: 'Comedy', language: 'Hindi', duration: 147, releaseDate: '2024-08-15', rating: 7.7, description: 'The town of Chanderi is haunted again by a new headless ghost threat, forcing Vicky and his friends to unite with Stree.', director: 'Amar Kaushik', cast: [{name:'Rajkummar Rao',role:'Vicky'},{name:'Shraddha Kapoor',role:'Stree'}], posterUrl: 'https://images.unsplash.com/photo-1514533450685-4493e01d1fdc?w=400' },
+  { id: 9, title: 'KGF Chapter 2', genre: 'Action', language: 'Kannada', duration: 168, releaseDate: '2022-04-14', rating: 8.2, description: 'In the blood-soaked Kolar Gold Fields, Rocky\'s name strikes fear into his foes. His allies look up to him, but the government sees him as a threat.', director: 'Prashanth Neel', cast: [{name:'Yash',role:'Rocky'},{name:'Sanjay Dutt',role:'Adheera'}], posterUrl: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?w=400' },
+  { id: 10, title: 'Jawan', genre: 'Action', language: 'Hindi', duration: 169, releaseDate: '2023-09-07', rating: 7.5, description: 'A personal vendetta leads a man to rectify the wrongs in society, while keeping a promise made years ago.', director: 'Atlee', cast: [{name:'Shah Rukh Khan',role:'Vikram Rathore / Azad'},{name:'Nayanthara',role:'Narmada Rai'}], posterUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400' },
+  { id: 11, title: 'Pathaan', genre: 'Action', language: 'Hindi', duration: 146, releaseDate: '2023-01-25', rating: 7.1, description: 'An Indian agent races against time to stop a mercenary group from deploying a deadly biological weapon.', director: 'Siddharth Anand', cast: [{name:'Shah Rukh Khan',role:'Pathaan'},{name:'Deepika Padukone',role:'Rubina Mohsin'}], posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400' },
+  { id: 12, title: 'Pushpa 2: The Rule', genre: 'Action', language: 'Telugu', duration: 175, releaseDate: '2024-12-05', rating: 8.1, description: 'Pushpa Raj establishes his dominance over the red sandalwood smuggling empire while battling SP Bhanwar Singh Shekhawat.', director: 'Sukumar', cast: [{name:'Allu Arjun',role:'Pushpa Raj'},{name:'Rashmika Mandanna',role:'Srivalli'}], posterUrl: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400' },
+  { id: 13, title: 'Tumbbad', genre: 'Horror', language: 'Hindi', duration: 104, releaseDate: '2018-10-12', rating: 8.2, description: 'A mythological horror story about a family who builds a shrine for Hastar, a monster who should never be worshipped.', director: 'Rahi Anil Barve', cast: [{name:'Sohum Shah',role:'Vinayak'},{name:'Jyoti Malshe',role:'Grandmother'}], posterUrl: 'https://images.unsplash.com/photo-1509281373149-e957c6296406?w=400' },
+  { id: 14, title: '3 Idiots', genre: 'Comedy', language: 'Hindi', duration: 170, releaseDate: '2009-12-25', rating: 8.4, description: 'Two friends search for their long-lost college companion while reflecting on their engineering days.', director: 'Rajkumar Hirani', cast: [{name:'Aamir Khan',role:'Rancho'},{name:'R. Madhavan',role:'Farhan'},{name:'Sharman Joshi',role:'Raju'}], posterUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400' },
+  { id: 15, title: 'Spider-Man: Across the Spider-Verse', genre: 'Sci-Fi', language: 'English', duration: 140, releaseDate: '2023-06-02', rating: 8.7, description: 'Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its existence.', director: 'Joaquim Dos Santos', cast: [{name:'Shameik Moore',role:'Miles Morales'},{name:'Hailee Steinfeld',role:'Gwen Stacy'}], posterUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400' },
+  { id: 16, title: 'Baahubali 2: The Conclusion', genre: 'Action', language: 'Telugu', duration: 167, releaseDate: '2017-04-28', rating: 8.2, description: 'Shiva, the son of Bahubali, learns about his heritage and sets out to reclaim his rightful place in the kingdom of Mahishmati.', director: 'S.S. Rajamouli', cast: [{name:'Prabhas',role:'Amarendra Baahubali'},{name:'Rana Daggubati',role:'Bhallaladeva'}], posterUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=400' },
+  { id: 17, title: 'Kantara', genre: 'Thriller', language: 'Kannada', duration: 148, releaseDate: '2022-09-30', rating: 8.3, description: 'When greed paves the way for a conflict between villagers and an evil force, a man invokes local deity traditions to defend his tribe.', director: 'Rishab Shetty', cast: [{name:'Rishab Shetty',role:'Shiva'},{name:'Sapthami Gowda',role:'Leela'}], posterUrl: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400' },
+  { id: 18, title: 'Brahmastra: Part One - Shiva', genre: 'Sci-Fi', language: 'Hindi', duration: 167, releaseDate: '2022-09-09', rating: 5.6, description: 'A young man on the brink of falling in love discovers he has a divine connection to the element of fire.', director: 'Ayan Mukerji', cast: [{name:'Ranbir Kapoor',role:'Shiva'},{name:'Alia Bhatt',role:'Isha'}], posterUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400' },
+  { id: 19, title: 'Lagaan', genre: 'Drama', language: 'Hindi', duration: 224, releaseDate: '2001-06-15', rating: 8.1, description: 'In Victorian India, villagers accept a challenge from British officers to play a game of cricket to avoid paying high taxes.', director: 'Ashutosh Gowariker', cast: [{name:'Aamir Khan',role:'Bhuvan'},{name:'Gracy Singh',role:'Gauri'}], posterUrl: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=400' },
+  { id: 20, title: 'Chhava', genre: 'Action', language: 'Hindi', duration: 155, releaseDate: '2025-02-14', rating: 8.6, description: 'A grand historical action saga detailing the valor, wisdom and heroic sacrifice of Chhatrapati Sambhaji Maharaj.', director: 'Laxman Utekar', cast: [{name:'Vicky Kaushal',role:'Sambhaji Maharaj'},{name:'Rashmika Mandanna',role:'Yesubai'}], posterUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=400' }
 ];
+
 const MOCK_THEATERS = [
   {id:1,theaterName:'PVR Cinemas',city:'Delhi',address:'Connaught Place, New Delhi',screens:4,totalSeats:720},
   {id:2,theaterName:'INOX Multiplex',city:'Delhi',address:'Select Citywalk, Saket',screens:3,totalSeats:540},
   {id:3,theaterName:'Cinepolis',city:'Mumbai',address:'DLF Mall, Andheri',screens:5,totalSeats:900},
 ];
+
 const MOCK_SHOWS = [
-  {id:101,movieTitle:'Galactic Storm',theaterName:'PVR Cinemas',showTime:'2025-06-01T10:00',ticketPrice:250,availableSeats:80},
-  {id:102,movieTitle:'Shadow Protocol',theaterName:'INOX Multiplex',showTime:'2025-06-01T14:00',ticketPrice:300,availableSeats:60},
-  {id:103,movieTitle:'Neon Requiem',theaterName:'Cinepolis',showTime:'2025-06-02T18:00',ticketPrice:280,availableSeats:95},
+  {id:101,movieId:1,theaterId:1,movieTitle:'Galactic Storm',theaterName:'PVR Cinemas',showTime:'2025-06-01T10:00',ticketPrice:250,availableSeats:80},
+  {id:102,movieId:2,theaterId:2,movieTitle:'Shadow Protocol',theaterName:'INOX Multiplex',showTime:'2025-06-01T14:00',ticketPrice:300,availableSeats:60},
+  {id:103,movieId:3,theaterId:3,movieTitle:'Neon Requiem',theaterName:'Cinepolis',showTime:'2025-06-02T18:00',ticketPrice:280,availableSeats:95},
 ];
+
 const MOCK_BOOKINGS = [
   {id:'BK001',userId:1,userName:'Rahul Sharma',movieTitle:'Galactic Storm',showTime:'2025-05-20T18:00',seats:['F5','F6'],totalAmount:1085,bookingStatus:'CONFIRMED',bookingTime:'2025-05-18T10:30'},
   {id:'BK002',userId:2,userName:'Priya Nair',movieTitle:'Shadow Protocol',showTime:'2025-05-25T13:30',seats:['C9'],totalAmount:315,bookingStatus:'CONFIRMED',bookingTime:'2025-05-20T15:00'},
   {id:'BK003',userId:3,userName:'Arjun Das',movieTitle:'Neon Requiem',showTime:'2025-04-12T21:00',seats:['H3','H4'],totalAmount:630,bookingStatus:'CANCELLED',bookingTime:'2025-04-10T09:15'},
   {id:'BK004',userId:1,userName:'Rahul Sharma',movieTitle:'Dil Ka Safar',showTime:'2025-06-05T16:00',seats:['D4'],totalAmount:315,bookingStatus:'PENDING',bookingTime:'2025-06-03T11:00'},
 ];
+
 const MOCK_USERS = [
   {id:1,fullName:'Rahul Sharma',email:'rahul@demo.com',role:'USER',createdAt:'2025-01-10',bookings:3},
   {id:2,fullName:'Priya Nair',email:'priya@demo.com',role:'USER',createdAt:'2025-02-14',bookings:1},
   {id:3,fullName:'Arjun Das',email:'arjun@demo.com',role:'USER',createdAt:'2025-03-01',bookings:2},
   {id:4,fullName:'Admin User',email:'admin@demo.com',role:'ADMIN',createdAt:'2025-01-01',bookings:0},
 ];
+
 const MOCK_PAYMENTS = [
   {id:'TXN8823',bookingId:'BK001',amount:1085,method:'card',status:'SUCCESS',createdAt:'2025-05-18T10:32'},
   {id:'TXN9901',bookingId:'BK002',amount:315,method:'upi',status:'SUCCESS',createdAt:'2025-05-20T15:02'},
@@ -341,16 +451,29 @@ const MOCK_PAYMENTS = [
   {id:'TXN0055',bookingId:'BK004',amount:315,method:'netbanking',status:'PENDING',createdAt:'2025-06-03T11:01'},
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+let adminMovies = [];
+let adminTheaters = [];
+let adminShows = [];
+let adminBookings = [];
+let adminUsers = [];
+let adminPayments = [];
+
+let editingMovieId = null;
+let editingTheaterId = null;
+let editingShowId = null;
+let editingBookingId = null;
+let editingUserId = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
   renderNavbar('admin');
   renderFooter();
-  loadDashboard();
-  loadMoviesTable();
-  loadTheatersTable();
-  loadShowsTable();
-  loadBookingsTable();
-  loadUsersTable();
-  loadPaymentsTable();
+  await loadMoviesTable();
+  await loadTheatersTable();
+  await loadShowsTable();
+  await loadBookingsTable();
+  await loadUsersTable();
+  await loadPaymentsTable();
+  await loadDashboard();
   renderWeeklyChart();
 });
 
@@ -375,27 +498,68 @@ function renderWeeklyChart() {
   `).join('');
 }
 
-function loadDashboard() {
-  document.getElementById('recentBookingsTable').innerHTML = buildBookingTable(MOCK_BOOKINGS.slice(0,4), false);
+async function loadDashboard() {
+  const totalBookings = adminBookings.length;
+  
+  const totalRevenueVal = adminPayments
+    .filter(p => p.paymentStatus === 'SUCCESS' || p.status === 'SUCCESS' || p.paymentStatus === 'PAID')
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+  const totalRevenue = totalRevenueVal > 100000 
+    ? `₹${(totalRevenueVal/100000).toFixed(1)}L` 
+    : `₹${totalRevenueVal.toLocaleString()}`;
+
+  const totalUsers = adminUsers.length;
+  const activeMovies = adminMovies.length;
+
+  document.getElementById('statBookings').textContent = totalBookings;
+  document.getElementById('statRevenue').textContent = totalRevenue;
+  document.getElementById('statUsers').textContent = totalUsers;
+  document.getElementById('statMovies').textContent = activeMovies;
+
+  document.getElementById('recentBookingsTable').innerHTML = buildBookingTable(adminBookings.slice(0,4), false);
+  
+  const pendingCount = adminBookings.filter(b => b.bookingStatus === 'PENDING').length;
+  const badge = document.getElementById('pendingBadge');
+  if (badge) {
+    badge.textContent = pendingCount;
+    badge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+  }
 }
 
-function loadMoviesTable() {
+/* ========================================================
+   MOVIES MANAGEMENT (CRUD)
+   ======================================================== */
+async function loadMoviesTable() {
+  if (!adminMovies.length) {
+    try {
+      const res = await API.movies.getAll('size=100');
+      const items = res?.content || (Array.isArray(res) ? res : []);
+      adminMovies = items.length ? items : [];
+    } catch {
+      adminMovies = [];
+    }
+    if (!adminMovies.length) {
+      const stored = localStorage.getItem('mv_movies');
+      adminMovies = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(MOCK_MOVIES));
+    }
+  }
+  localStorage.setItem('mv_movies', JSON.stringify(adminMovies));
   document.getElementById('moviesTable').innerHTML = `
     <table>
       <thead><tr><th>#</th><th>Title</th><th>Genre</th><th>Language</th><th>Duration</th><th>Release</th><th>Rating</th><th>Actions</th></tr></thead>
-      <tbody>${MOCK_MOVIES.map(m=>`
+      <tbody>${adminMovies.map(m=>`
         <tr>
           <td style="color:var(--text-muted);font-family:var(--font-mono)">${m.id}</td>
           <td><strong>${m.title}</strong></td>
-          <td><span class="badge badge-gray">${m.genre}</span></td>
-          <td>${m.language}</td>
-          <td>${m.duration} min</td>
+          <td><span class="badge badge-gray">${m.genre || 'General'}</span></td>
+          <td>${m.language || 'English'}</td>
+          <td>${m.duration || 120} min</td>
           <td>${Utils.formatDate(m.releaseDate)}</td>
-          <td><span class="badge badge-gold">⭐ ${m.rating}</span></td>
+          <td><span class="badge badge-gold">⭐ ${m.rating || 8.0}</span></td>
           <td>
             <div style="display:flex;gap:6px">
-              <button class="btn btn-ghost btn-sm" onclick="Toast.info('Edit: ${m.title}')">✏</button>
-              <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="deleteMovie(${m.id},'${m.title}')">🗑</button>
+              <button class="btn btn-ghost btn-sm" onclick="openEditMovieModal(${m.id})">✏ Edit</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="deleteMovie(${m.id},'${(m.title||'').replace(/'/g, "\\'")}')">🗑 Delete</button>
             </div>
           </td>
         </tr>`).join('')}
@@ -403,44 +567,350 @@ function loadMoviesTable() {
     </table>`;
 }
 
-function loadTheatersTable() {
+function openAddMovieModal() { 
+  editingMovieId = null;
+  document.getElementById('modalFormTitle').textContent = 'ADD MOVIE';
+  document.getElementById('mTitle').value = '';
+  document.getElementById('mGenre').value = 'Action';
+  document.getElementById('mLang').value = 'English';
+  document.getElementById('mDuration').value = '';
+  document.getElementById('mRelease').value = '';
+  document.getElementById('mDesc').value = '';
+  document.getElementById('mPoster').value = '';
+  document.getElementById('addMovieModal').style.display='block'; 
+}
+
+function openEditMovieModal(id) {
+  const m = adminMovies.find(item => item.id == id) || MOCK_MOVIES.find(item => item.id == id);
+  if (!m) return;
+  editingMovieId = id;
+  document.getElementById('modalFormTitle').textContent = 'EDIT MOVIE';
+  document.getElementById('mTitle').value = m.title || '';
+  document.getElementById('mGenre').value = m.genre || 'Action';
+  document.getElementById('mLang').value = m.language || 'English';
+  document.getElementById('mDuration').value = m.duration || '';
+  document.getElementById('mRelease').value = m.releaseDate ? m.releaseDate.split('T')[0] : '';
+  document.getElementById('mDesc').value = m.description || '';
+  document.getElementById('mPoster').value = m.posterUrl || '';
+  document.getElementById('addMovieModal').style.display='block';
+}
+
+function closeMovieModal() { document.getElementById('addMovieModal').style.display='none'; }
+
+async function saveMovie() {
+  const title = document.getElementById('mTitle').value.trim();
+  if (!title) { Toast.error('Title is required'); return; }
+  const movieData = {
+    title, 
+    genre: document.getElementById('mGenre').value,
+    language: document.getElementById('mLang').value,
+    duration: parseInt(document.getElementById('mDuration').value)||120,
+    releaseDate: document.getElementById('mRelease').value,
+    description: document.getElementById('mDesc').value,
+    posterUrl: document.getElementById('mPoster').value,
+    rating: 8.5
+  };
+
+  if (editingMovieId) {
+    try {
+      await API.movies.update(editingMovieId, movieData);
+    } catch (e) {
+      console.warn("Backend API call failed, saving locally", e);
+    }
+    const idx = adminMovies.findIndex(m => m.id == editingMovieId);
+    if (idx !== -1) {
+      adminMovies[idx] = { ...adminMovies[idx], ...movieData };
+    }
+    Toast.success(`Movie "${title}" updated successfully!`);
+  } else {
+    let newId = Date.now();
+    try {
+      const res = await API.movies.create(movieData);
+      if (res && res.id) newId = res.id;
+    } catch (e) {
+      console.warn("Backend API call failed, adding locally", e);
+    }
+    adminMovies.unshift({ id: newId, ...movieData });
+    Toast.success(`Movie "${title}" added successfully!`);
+  }
+
+  localStorage.setItem('mv_movies', JSON.stringify(adminMovies));
+  closeMovieModal();
+  await loadMoviesTable();
+  await loadDashboard();
+}
+
+async function deleteMovie(id, title) {
+  if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+  try { 
+    await API.movies.delete(id); 
+  } catch (e) {
+    console.warn("Backend API call failed, deleting locally", e);
+  }
+  adminMovies = adminMovies.filter(m => m.id != id);
+  localStorage.setItem('mv_movies', JSON.stringify(adminMovies));
+  Toast.success(`"${title}" deleted successfully.`);
+  await loadMoviesTable();
+  await loadDashboard();
+}
+
+/* ========================================================
+   THEATERS MANAGEMENT (CRUD)
+   ======================================================== */
+async function loadTheatersTable() {
+  if (!adminTheaters.length) {
+    try {
+      const res = await API.theaters.getAll();
+      const items = Array.isArray(res) ? res : (res?.content || []);
+      adminTheaters = items.length ? items : JSON.parse(JSON.stringify(MOCK_THEATERS));
+    } catch {
+      adminTheaters = JSON.parse(JSON.stringify(MOCK_THEATERS));
+    }
+  }
   document.getElementById('theatersTable').innerHTML = `
     <table>
       <thead><tr><th>#</th><th>Theater Name</th><th>City</th><th>Address</th><th>Screens</th><th>Total Seats</th><th>Actions</th></tr></thead>
-      <tbody>${MOCK_THEATERS.map(t=>`
+      <tbody>${adminTheaters.map(t=>`
         <tr>
           <td style="color:var(--text-muted);font-family:var(--font-mono)">${t.id}</td>
           <td><strong>${t.theaterName}</strong></td>
           <td>${t.city}</td>
-          <td style="color:var(--text-muted)">${t.address}</td>
-          <td>${t.screens}</td>
-          <td>${t.totalSeats}</td>
-          <td><button class="btn btn-ghost btn-sm" onclick="Toast.info('Edit theater')">✏</button></td>
+          <td style="color:var(--text-muted)">${t.address || '—'}</td>
+          <td>${t.screens || 1}</td>
+          <td>${t.totalSeats || 500}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openEditTheaterModal(${t.id})">✏ Edit</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="deleteTheater(${t.id},'${(t.theaterName||'').replace(/'/g, "\\'")}')">🗑 Delete</button>
+            </div>
+          </td>
         </tr>`).join('')}
       </tbody>
     </table>`;
 }
 
-function loadShowsTable() {
+function openAddTheaterModal() {
+  editingTheaterId = null;
+  document.getElementById('theaterModalTitle').textContent = 'ADD THEATER';
+  document.getElementById('tName').value = '';
+  document.getElementById('tCity').value = '';
+  document.getElementById('tAddress').value = '';
+  document.getElementById('tScreens').value = '4';
+  document.getElementById('tSeats').value = '500';
+  document.getElementById('addTheaterModal').style.display = 'block';
+}
+
+function openEditTheaterModal(id) {
+  const t = adminTheaters.find(item => item.id == id);
+  if (!t) return;
+  editingTheaterId = id;
+  document.getElementById('theaterModalTitle').textContent = 'EDIT THEATER';
+  document.getElementById('tName').value = t.theaterName || '';
+  document.getElementById('tCity').value = t.city || '';
+  document.getElementById('tAddress').value = t.address || '';
+  document.getElementById('tScreens').value = t.screens || 4;
+  document.getElementById('tSeats').value = t.totalSeats || 500;
+  document.getElementById('addTheaterModal').style.display = 'block';
+}
+
+function closeTheaterModal() { document.getElementById('addTheaterModal').style.display = 'none'; }
+
+async function saveTheater() {
+  const name = document.getElementById('tName').value.trim();
+  const city = document.getElementById('tCity').value.trim();
+  if (!name || !city) { Toast.error('Theater Name and City are required'); return; }
+
+  const theaterData = {
+    theaterName: name,
+    city: city,
+    address: document.getElementById('tAddress').value.trim(),
+    screens: parseInt(document.getElementById('tScreens').value) || 4,
+    totalSeats: parseInt(document.getElementById('tSeats').value) || 500
+  };
+
+  if (editingTheaterId) {
+    try {
+      await API.theaters.update(editingTheaterId, theaterData);
+    } catch (e) {
+      console.warn("API update failed, updating locally", e);
+    }
+    const idx = adminTheaters.findIndex(t => t.id == editingTheaterId);
+    if (idx !== -1) adminTheaters[idx] = { ...adminTheaters[idx], ...theaterData };
+    Toast.success(`Theater "${name}" updated successfully!`);
+  } else {
+    let newId = Date.now();
+    try {
+      const res = await API.theaters.create(theaterData);
+      if (res && res.id) newId = res.id;
+    } catch (e) {
+      console.warn("API create failed, adding locally", e);
+    }
+    adminTheaters.unshift({ id: newId, ...theaterData });
+    Toast.success(`Theater "${name}" added successfully!`);
+  }
+
+  closeTheaterModal();
+  await loadTheatersTable();
+}
+
+async function deleteTheater(id, name) {
+  if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+  try {
+    await API.theaters.delete(id);
+  } catch (e) {
+    console.warn("API delete failed, deleting locally", e);
+  }
+  adminTheaters = adminTheaters.filter(t => t.id != id);
+  Toast.success(`Theater "${name}" deleted.`);
+  await loadTheatersTable();
+}
+
+/* ========================================================
+   SHOWS MANAGEMENT (CRUD)
+   ======================================================== */
+async function loadShowsTable() {
+  if (!adminShows.length) {
+    try {
+      const res = await API.shows.getAll();
+      const items = Array.isArray(res) ? res : (res?.content || []);
+      adminShows = items.length ? items : JSON.parse(JSON.stringify(MOCK_SHOWS));
+    } catch {
+      adminShows = JSON.parse(JSON.stringify(MOCK_SHOWS));
+    }
+  }
   document.getElementById('showsTable').innerHTML = `
     <table>
       <thead><tr><th>#</th><th>Movie</th><th>Theater</th><th>Show Time</th><th>Price</th><th>Available</th><th>Actions</th></tr></thead>
-      <tbody>${MOCK_SHOWS.map(s=>`
+      <tbody>${adminShows.map(s=>`
         <tr>
           <td style="color:var(--text-muted);font-family:var(--font-mono)">${s.id}</td>
-          <td><strong>${s.movieTitle}</strong></td>
-          <td>${s.theaterName}</td>
+          <td><strong>${s.movieTitle || 'Movie #' + s.movieId}</strong></td>
+          <td>${s.theaterName || 'Theater #' + s.theaterId}</td>
           <td>${Utils.formatDateTime(s.showTime)}</td>
           <td style="color:var(--accent);font-weight:600">${Utils.formatCurrency(s.ticketPrice)}</td>
           <td><span class="badge badge-green">${s.availableSeats} seats</span></td>
-          <td><button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="Toast.warning('Delete show?')">🗑</button></td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openEditShowModal(${s.id})">✏ Edit</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="deleteShow(${s.id},'${(s.movieTitle||'Show').replace(/'/g, "\\'")}')">🗑 Delete</button>
+            </div>
+          </td>
         </tr>`).join('')}
       </tbody>
     </table>`;
 }
 
-function loadBookingsTable() {
-  document.getElementById('bookingsTable').innerHTML = buildBookingTable(MOCK_BOOKINGS, true);
+function populateShowSelects() {
+  const mSelect = document.getElementById('sMovieId');
+  const tSelect = document.getElementById('sTheaterId');
+  
+  const movies = adminMovies.length ? adminMovies : MOCK_MOVIES;
+  const theaters = adminTheaters.length ? adminTheaters : MOCK_THEATERS;
+
+  mSelect.innerHTML = movies.map(m => `<option value="${m.id}">${m.title}</option>`).join('');
+  tSelect.innerHTML = theaters.map(t => `<option value="${t.id}">${t.theaterName} (${t.city})</option>`).join('');
+}
+
+function openAddShowModal() {
+  editingShowId = null;
+  populateShowSelects();
+  document.getElementById('showModalTitle').textContent = 'ADD SHOW';
+  document.getElementById('sShowTime').value = '';
+  document.getElementById('sPrice').value = '250';
+  document.getElementById('sAvailableSeats').value = '100';
+  document.getElementById('addShowModal').style.display = 'block';
+}
+
+function openEditShowModal(id) {
+  const s = adminShows.find(item => item.id == id);
+  if (!s) return;
+  editingShowId = id;
+  populateShowSelects();
+  document.getElementById('showModalTitle').textContent = 'EDIT SHOW';
+  if (s.movieId) document.getElementById('sMovieId').value = s.movieId;
+  if (s.theaterId) document.getElementById('sTheaterId').value = s.theaterId;
+  document.getElementById('sShowTime').value = s.showTime ? s.showTime.slice(0, 16) : '';
+  document.getElementById('sPrice').value = s.ticketPrice || 250;
+  document.getElementById('sAvailableSeats').value = s.availableSeats || 100;
+  document.getElementById('addShowModal').style.display = 'block';
+}
+
+function closeShowModal() { document.getElementById('addShowModal').style.display = 'none'; }
+
+async function saveShow() {
+  const movieId = parseInt(document.getElementById('sMovieId').value);
+  const theaterId = parseInt(document.getElementById('sTheaterId').value);
+  const showTime = document.getElementById('sShowTime').value;
+  const ticketPrice = parseFloat(document.getElementById('sPrice').value) || 250;
+  const availableSeats = parseInt(document.getElementById('sAvailableSeats').value) || 100;
+
+  if (!showTime) { Toast.error('Show Time is required'); return; }
+
+  const selMovie = adminMovies.find(m => m.id == movieId) || MOCK_MOVIES.find(m => m.id == movieId);
+  const selTheater = adminTheaters.find(t => t.id == theaterId) || MOCK_THEATERS.find(t => t.id == theaterId);
+
+  const showData = {
+    movieId, theaterId, showTime, ticketPrice, availableSeats,
+    movieTitle: selMovie?.title || `Movie #${movieId}`,
+    theaterName: selTheater?.theaterName || `Theater #${theaterId}`
+  };
+
+  if (editingShowId) {
+    try {
+      await API.shows.update(editingShowId, showData);
+    } catch (e) {
+      console.warn("API update show failed, updating locally", e);
+    }
+    const idx = adminShows.findIndex(s => s.id == editingShowId);
+    if (idx !== -1) adminShows[idx] = { ...adminShows[idx], ...showData };
+    Toast.success('Show updated successfully!');
+  } else {
+    let newId = Date.now();
+    try {
+      const res = await API.shows.create(showData);
+      if (res && res.id) newId = res.id;
+    } catch (e) {
+      console.warn("API create show failed, adding locally", e);
+    }
+    adminShows.unshift({ id: newId, ...showData });
+    Toast.success('Show added successfully!');
+  }
+
+  closeShowModal();
+  await loadShowsTable();
+}
+
+async function deleteShow(id, title) {
+  if (!confirm(`Are you sure you want to delete this show for "${title}"?`)) return;
+  try {
+    await API.shows.delete(id);
+  } catch (e) {
+    console.warn("API delete show failed, deleting locally", e);
+  }
+  adminShows = adminShows.filter(s => s.id != id);
+  Toast.success('Show deleted successfully.');
+  await loadShowsTable();
+}
+
+/* ========================================================
+   BOOKINGS MANAGEMENT (CRUD)
+   ======================================================== */
+async function loadBookingsTable() {
+  if (!adminBookings.length) {
+    try {
+      const res = await API.bookings.getAll();
+      const items = Array.isArray(res) ? res : (res?.content || []);
+      adminBookings = items.length ? items : [];
+    } catch {
+      adminBookings = [];
+    }
+    if (!adminBookings.length) {
+      const stored = localStorage.getItem('mv_admin_bookings');
+      adminBookings = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(MOCK_BOOKINGS));
+    }
+  }
+  localStorage.setItem('mv_admin_bookings', JSON.stringify(adminBookings));
+  document.getElementById('bookingsTable').innerHTML = buildBookingTable(adminBookings, true);
 }
 
 function buildBookingTable(bookings, showActions) {
@@ -449,51 +919,192 @@ function buildBookingTable(bookings, showActions) {
     <tbody>${bookings.map(b=>`
       <tr>
         <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${b.id}</td>
-        <td>${b.userName||'—'}</td>
-        <td><strong>${b.movieTitle}</strong></td>
-        <td style="font-size:13px">${Utils.formatDateTime(b.showTime)}</td>
+        <td>${b.userName || b.userId || '—'}</td>
+        <td><strong>${b.movieTitle || 'Show #' + b.showId}</strong></td>
+        <td style="font-size:13px">${Utils.formatDateTime(b.showTime || b.bookingTime)}</td>
         <td>${(b.seats||[]).map(s=>`<span class="badge badge-gray" style="font-family:var(--font-mono);font-size:10px">${s}</span>`).join(' ')}</td>
         <td style="font-weight:600;color:var(--text-primary)">${Utils.formatCurrency(b.totalAmount)}</td>
         <td><span class="badge ${Utils.getStatusBadge(b.bookingStatus)}">${b.bookingStatus}</span></td>
-        ${showActions?`<td><button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="Toast.info('Booking details: ${b.id}')">View</button></td>`:''}
+        ${showActions?`<td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="openEditBookingModal('${b.id}')">✏ Status</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="deleteBooking('${b.id}')">🗑 Delete</button>
+          </div>
+        </td>`:''}
       </tr>`).join('')}
     </tbody>
   </table>`;
 }
 
-function loadUsersTable() {
+function openEditBookingModal(id) {
+  const b = adminBookings.find(item => item.id == id);
+  if (!b) return;
+  editingBookingId = id;
+  document.getElementById('bIdDisplay').value = b.id;
+  document.getElementById('bStatus').value = b.bookingStatus || 'CONFIRMED';
+  document.getElementById('editBookingModal').style.display = 'block';
+}
+
+function closeBookingModal() { document.getElementById('editBookingModal').style.display = 'none'; }
+
+async function saveBookingStatus() {
+  const status = document.getElementById('bStatus').value;
+  try {
+    await API.bookings.updateStatus(editingBookingId, status);
+  } catch (e) {
+    console.warn("API update booking status failed, updating locally", e);
+  }
+  const idx = adminBookings.findIndex(b => b.id == editingBookingId);
+  if (idx !== -1) adminBookings[idx].bookingStatus = status;
+  localStorage.setItem('mv_admin_bookings', JSON.stringify(adminBookings));
+  Toast.success(`Booking status updated to ${status}`);
+  closeBookingModal();
+  await loadBookingsTable();
+  await loadDashboard();
+}
+
+async function deleteBooking(id) {
+  if (!confirm(`Delete booking "${id}"?`)) return;
+  try {
+    await API.bookings.delete(id);
+  } catch (e) {
+    console.warn("API delete booking failed, deleting locally", e);
+  }
+  adminBookings = adminBookings.filter(b => b.id != id);
+  localStorage.setItem('mv_admin_bookings', JSON.stringify(adminBookings));
+  Toast.success(`Booking "${id}" deleted.`);
+  await loadBookingsTable();
+  await loadDashboard();
+}
+
+/* ========================================================
+   USERS MANAGEMENT (CRUD)
+   ======================================================== */
+async function loadUsersTable() {
+  if (!adminUsers.length) {
+    try {
+      const res = await API.users.getAll();
+      const items = Array.isArray(res) ? res : (res?.data || res?.content || []);
+      adminUsers = items.length ? items : JSON.parse(JSON.stringify(MOCK_USERS));
+    } catch {
+      adminUsers = JSON.parse(JSON.stringify(MOCK_USERS));
+    }
+  }
   document.getElementById('usersTable').innerHTML = `
     <table>
-      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Bookings</th><th>Actions</th></tr></thead>
-      <tbody>${MOCK_USERS.map(u=>`
+      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+      <tbody>${adminUsers.map(u=>`
         <tr>
           <td style="color:var(--text-muted)">${u.id}</td>
           <td><strong>${u.fullName}</strong></td>
           <td style="color:var(--text-muted)">${u.email}</td>
           <td><span class="badge ${u.role==='ADMIN'?'badge-red':'badge-blue'}">${u.role}</span></td>
           <td>${Utils.formatDate(u.createdAt)}</td>
-          <td>${u.bookings}</td>
-          <td><button class="btn btn-ghost btn-sm" onclick="Toast.info('View user: ${u.fullName}')">View</button></td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openEditUserModal(${u.id})">✏ Edit</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="deleteUser(${u.id},'${(u.fullName||'User').replace(/'/g, "\\'")}')">🗑 Delete</button>
+            </div>
+          </td>
         </tr>`).join('')}
       </tbody>
     </table>`;
 }
 
-function loadPaymentsTable() {
+function openEditUserModal(id) {
+  const u = adminUsers.find(item => item.id == id);
+  if (!u) return;
+  editingUserId = id;
+  document.getElementById('uName').value = u.fullName || '';
+  document.getElementById('uEmail').value = u.email || '';
+  document.getElementById('uRole').value = u.role || 'USER';
+  document.getElementById('editUserModal').style.display = 'block';
+}
+
+function closeUserModal() { document.getElementById('editUserModal').style.display = 'none'; }
+
+async function saveUser() {
+  const name = document.getElementById('uName').value.trim();
+  const email = document.getElementById('uEmail').value.trim();
+  const role = document.getElementById('uRole').value;
+
+  if (!name || !email) { Toast.error('Name and Email are required'); return; }
+
+  const userData = { fullName: name, email, role };
+  try {
+    await API.users.update(editingUserId, userData);
+  } catch (e) {
+    console.warn("API update user failed, updating locally", e);
+  }
+  const idx = adminUsers.findIndex(u => u.id == editingUserId);
+  if (idx !== -1) adminUsers[idx] = { ...adminUsers[idx], ...userData };
+  Toast.success(`User "${name}" updated successfully!`);
+  closeUserModal();
+  await loadUsersTable();
+  await loadDashboard();
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Delete user "${name}"?`)) return;
+  try {
+    await API.users.delete(id);
+  } catch (e) {
+    console.warn("API delete user failed, deleting locally", e);
+  }
+  adminUsers = adminUsers.filter(u => u.id != id);
+  Toast.success(`User "${name}" deleted.`);
+  await loadUsersTable();
+  await loadDashboard();
+}
+
+/* ========================================================
+   PAYMENTS MANAGEMENT (CRUD)
+   ======================================================== */
+async function loadPaymentsTable() {
+  if (!adminPayments.length) {
+    try {
+      const res = await API.payments.getAll();
+      const items = Array.isArray(res) ? res : (res?.content || []);
+      adminPayments = items.length ? items : [];
+    } catch {
+      adminPayments = [];
+    }
+    if (!adminPayments.length) {
+      const stored = localStorage.getItem('mv_admin_payments');
+      adminPayments = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(MOCK_PAYMENTS));
+    }
+  }
+  localStorage.setItem('mv_admin_payments', JSON.stringify(adminPayments));
   document.getElementById('paymentsTable').innerHTML = `
     <table>
-      <thead><tr><th>TXN ID</th><th>Booking ID</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
-      <tbody>${MOCK_PAYMENTS.map(p=>`
+      <thead><tr><th>TXN ID</th><th>Booking ID</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody>${adminPayments.map(p=>`
         <tr>
-          <td style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${p.id}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${p.id || p.transactionId}</td>
           <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${p.bookingId}</td>
           <td style="font-weight:600">${Utils.formatCurrency(p.amount)}</td>
-          <td><span class="badge badge-gray">${p.method}</span></td>
-          <td><span class="badge ${Utils.getStatusBadge(p.status)}">${p.status}</span></td>
+          <td><span class="badge badge-gray">${p.paymentMethod || p.method || '—'}</span></td>
+          <td><span class="badge ${Utils.getStatusBadge(p.paymentStatus || p.status)}">${p.paymentStatus || p.status}</span></td>
           <td style="font-size:13px;color:var(--text-muted)">${Utils.formatDateTime(p.createdAt)}</td>
+          <td>
+            <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="deletePayment('${p.id || p.transactionId}')">🗑 Delete</button>
+          </td>
         </tr>`).join('')}
       </tbody>
     </table>`;
+}
+
+async function deletePayment(id) {
+  if (!confirm(`Delete payment transaction "${id}"?`)) return;
+  try {
+    await API.payments.delete(id);
+  } catch (e) {
+    console.warn("API delete payment failed, deleting locally", e);
+  }
+  adminPayments = adminPayments.filter(p => (p.id || p.transactionId) != id);
+  Toast.success(`Payment transaction "${id}" deleted.`);
+  await loadPaymentsTable();
+  await loadDashboard();
 }
 
 function filterTable(tableId, query) {
@@ -502,36 +1113,6 @@ function filterTable(tableId, query) {
   rows.forEach(row => {
     row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
-}
-
-function openAddMovieModal() { document.getElementById('addMovieModal').style.display='block'; }
-function closeMovieModal() { document.getElementById('addMovieModal').style.display='none'; }
-
-async function saveMovie() {
-  const title = document.getElementById('mTitle').value.trim();
-  if (!title) { Toast.error('Title is required'); return; }
-  const movie = {
-    title, genre: document.getElementById('mGenre').value,
-    language: document.getElementById('mLang').value,
-    duration: parseInt(document.getElementById('mDuration').value)||120,
-    releaseDate: document.getElementById('mRelease').value,
-    description: document.getElementById('mDesc').value,
-    posterUrl: document.getElementById('mPoster').value,
-  };
-  try { await API.movies.create(movie); } catch {}
-  MOCK_MOVIES.push({ ...movie, id: MOCK_MOVIES.length+1, rating: 0 });
-  loadMoviesTable();
-  closeMovieModal();
-  Toast.success(`Movie "${title}" added successfully!`);
-}
-
-function deleteMovie(id, title) {
-  if (!confirm(`Delete "${title}"?`)) return;
-  try { API.movies.delete(id); } catch {}
-  const idx = MOCK_MOVIES.findIndex(m=>m.id===id);
-  if (idx>=0) MOCK_MOVIES.splice(idx,1);
-  loadMoviesTable();
-  Toast.success(`"${title}" deleted.`);
 }
 </script>
 </body>

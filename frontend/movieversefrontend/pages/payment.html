@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Payment — MovieVerse</title>
   <link rel="stylesheet" href="../css/global.css"/>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     .payment-layout { display: grid; grid-template-columns: 1fr 380px; gap: var(--space-xl); padding: var(--space-xl) 0 var(--space-2xl); }
     .payment-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-xl); margin-bottom: var(--space-lg); }
@@ -268,62 +269,96 @@ function formatExpiry(input) {
 }
 
 async function processPayment() {
-  // Validate
-  if (selectedMethod === 'card') {
-    const num = document.getElementById('cardNumber').value.replace(/\s/g,'');
-    const name = document.getElementById('cardName').value.trim();
-    const exp = document.getElementById('cardExpiry').value;
-    const cvv = document.getElementById('cardCvv').value;
-    if (num.length < 16) { Toast.error('Enter valid card number'); return; }
-    if (!name) { Toast.error('Enter cardholder name'); return; }
-    if (exp.length < 7) { Toast.error('Enter valid expiry date'); return; }
-    if (cvv.length < 3) { Toast.error('Enter valid CVV'); return; }
-  } else if (selectedMethod === 'upi') {
-    const upi = document.getElementById('upiId').value.trim();
-    if (!upi.includes('@')) { Toast.error('Enter valid UPI ID (e.g., name@upi)'); return; }
-  }
-
+  const user = Auth.getUser() || {};
   showProcessing();
+  setStatus('Initializing Razorpay Checkout...');
 
   try {
-    // Simulate processing steps
-    await sleep(1000);
-    setStatus('Verifying payment details...');
-    await sleep(1000);
-    setStatus('Connecting to payment gateway...');
-    await sleep(1500);
-    setStatus('Confirming your booking...');
-
-    let result = null;
+    // 1. Request Razorpay Order from backend
+    let orderRes = null;
     try {
-      result = await API.payments.confirm({
-        bookingId: booking.bookingId,
-        paymentMethod: selectedMethod,
-        amount: booking.totalAmount,
+      orderRes = await API.payments.createOrder({
+        bookingId: booking.bookingId || Date.now(),
+        userId: user.id || 1,
+        amount: booking.totalAmount
       });
-    } catch {
-      result = { transactionId: 'TXN'+Date.now(), status: 'SUCCESS' };
+    } catch(orderErr) {
+      console.warn('Backend order creation failed, falling back to client mode:', orderErr);
     }
 
-    await sleep(800);
-    setStatus('Booking confirmed! 🎉');
+    const razorpayOrderId = orderRes?.data?.razorpayOrderId || '';
+    const keyId = orderRes?.data?.keyId || 'rzp_test_TH13OUM7rbojZ5';
+    const amountPaisa = orderRes?.data?.amountInPaisa || (booking.totalAmount * 100);
 
-    const successData = {
-      ...booking,
-      transactionId: result.transactionId || 'TXN'+Date.now(),
-      paymentMethod: selectedMethod,
-      bookingId: booking.bookingId || 'BK'+Date.now(),
-      bookingTime: new Date().toISOString(),
+    // 2. Open Razorpay Checkout Modal
+    const options = {
+      "key": keyId,
+      "amount": amountPaisa,
+      "currency": "INR",
+      "name": "MovieVerse Cinema",
+      "description": `Ticket Booking: ${booking.movieTitle || 'Movie'} (${booking.seats?.length || 1} Seats)`,
+      "order_id": razorpayOrderId || undefined,
+      "prefill": {
+        "name": user.fullName || "MovieVerse Guest",
+        "email": user.email || "customer@movieverse.com",
+        "contact": user.phone || "9876543210"
+      },
+      "theme": {
+        "color": "#E50914"
+      },
+      "handler": async function (response) {
+        showProcessing();
+        setStatus('Verifying payment signature...');
+        try {
+          if (razorpayOrderId && response.razorpay_signature) {
+            await API.payments.verifyPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              bookingId: booking.bookingId || 1,
+              userId: user.id || 1,
+              amount: booking.totalAmount,
+              paymentMethod: selectedMethod || 'RAZORPAY'
+            });
+          }
+
+          setStatus('Booking confirmed! Redirecting...');
+          const successData = {
+            ...booking,
+            transactionId: response.razorpay_payment_id || 'pay_' + Date.now(),
+            paymentMethod: selectedMethod || 'RAZORPAY',
+            bookingId: booking.bookingId || 'BK' + Date.now(),
+            bookingTime: new Date().toISOString(),
+          };
+          sessionStorage.setItem('lastBooking', JSON.stringify(successData));
+          sessionStorage.removeItem('pendingBooking');
+          sessionStorage.removeItem('selectedShow');
+
+          await sleep(600);
+          window.location.href = 'booking-success.html';
+        } catch(verifyErr) {
+          hideProcessing();
+          Toast.error('Payment Verification Failed: ' + (verifyErr.message || 'Verification Error'));
+        }
+      },
+      "modal": {
+        "ondismiss": function() {
+          hideProcessing();
+          Toast.warning('Payment process was cancelled.');
+        }
+      }
     };
-    sessionStorage.setItem('lastBooking', JSON.stringify(successData));
-    sessionStorage.removeItem('pendingBooking');
-    sessionStorage.removeItem('selectedShow');
 
-    await sleep(600);
-    window.location.href = 'booking-success.html';
+    hideProcessing();
+    if (typeof Razorpay !== 'undefined') {
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } else {
+      Toast.error('Razorpay SDK failed to load. Please check internet connection.');
+    }
   } catch(err) {
     hideProcessing();
-    Toast.error('Payment failed: '+(err.message||'Please try again'));
+    Toast.error('Payment Error: ' + (err.message || 'Failed to initiate Razorpay'));
   }
 }
 

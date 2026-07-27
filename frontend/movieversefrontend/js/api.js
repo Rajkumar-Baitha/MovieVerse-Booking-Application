@@ -68,9 +68,20 @@ const API = {
   },
 
   async _handleResponse(res) {
-    const contentType = res.headers.get('content-type') || '';
-    const isJson = contentType.includes('application/json');
-    const body = isJson ? await res.json() : await res.text();
+    const text = await res.text();
+    let body = text;
+    let isJson = false;
+    if (text && text.trim()) {
+      try {
+        body = JSON.parse(text);
+        isJson = true;
+      } catch (e) {
+        // Not JSON
+      }
+    } else {
+      body = {};
+      isJson = true;
+    }
 
     if (!res.ok) {
       const msg = (isJson && body.message) ? body.message :
@@ -119,6 +130,7 @@ const API = {
   auth: {
     register: (data) => API.post(`${CONFIG.AUTH_SERVICE}/register`, data, false),
     login: (data) => API.post(`${CONFIG.AUTH_SERVICE}/login`, data, false),
+    googleLogin: (data) => API.post(`${CONFIG.AUTH_SERVICE}/google`, data, false),
     me: () => API.get(`${CONFIG.AUTH_SERVICE}/me`),
   },
 
@@ -161,13 +173,27 @@ const API = {
     getUserBookings: (userId) => API.get(`${CONFIG.BOOKING_SERVICE}/user/${userId}`),
     getById: (id) => API.get(`${CONFIG.BOOKING_SERVICE}/${id}`),
     getAll: () => API.get(`${CONFIG.BOOKING_SERVICE}/admin/all`),
+    updateStatus: (id, status) => API.put(`${CONFIG.BOOKING_SERVICE}/${id}/status`, { status }),
+    delete: (id) => API.delete(`${CONFIG.BOOKING_SERVICE}/${id}`),
   },
 
   /* ---- Payment APIs ---- */
   payments: {
+    getConfig: () => API.get(`${CONFIG.PAYMENT_SERVICE}/config`),
+    createOrder: (data) => API.post(`${CONFIG.PAYMENT_SERVICE}/create-order`, data),
+    verifyPayment: (data) => API.post(`${CONFIG.PAYMENT_SERVICE}/verify`, data),
     initiate: (data) => API.post(`${CONFIG.PAYMENT_SERVICE}/initiate`, data),
     confirm: (data) => API.post(`${CONFIG.PAYMENT_SERVICE}/confirm`, data),
     status: (bookingId) => API.get(`${CONFIG.PAYMENT_SERVICE}/status/${bookingId}`),
+    getAll: () => API.get(CONFIG.PAYMENT_SERVICE),
+    delete: (id) => API.delete(`${CONFIG.PAYMENT_SERVICE}/${id}`),
+  },
+
+  /* ---- User Admin APIs ---- */
+  users: {
+    getAll: () => API.get(`${CONFIG.AUTH_SERVICE}/users`),
+    update: (id, data) => API.put(`${CONFIG.AUTH_SERVICE}/users/${id}`, data),
+    delete: (id) => API.delete(`${CONFIG.AUTH_SERVICE}/users/${id}`),
   },
 };
 
@@ -359,13 +385,25 @@ const Utils = {
     window.history.replaceState({}, '', url);
   },
 
-  /* Fake movie poster based on title */
+  /* High-quality movie poster URL helper */
   getPosterUrl: (movie) => {
-    if (movie?.posterUrl && movie.posterUrl.startsWith('http')) return movie.posterUrl;
-    const colors = ['e50914,111118', 'f5c518,111118', '3b82f6,111118', '22c55e,111118', 'a855f7,111118'];
-    const pick = colors[Math.abs(hashStr(movie?.title || 'M')) % colors.length];
-    const title = encodeURIComponent(movie?.title?.toUpperCase() || 'MOVIE');
-    return `https://placehold.co/300x450/${pick.split(',')[1]}/${pick.split(',')[0]}?text=${title}&font=bebas-neue`;
+    if (movie?.posterUrl && movie.posterUrl.startsWith('http') && !movie.posterUrl.includes('example.com')) {
+      return movie.posterUrl;
+    }
+    const posterStock = [
+      'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1517649763962-0c623266010b?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1568832359672-e36cf5d74f54?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1514533450685-4493e01d1fdc?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop'
+    ];
+    const pick = posterStock[Math.abs(hashStr(movie?.title || 'M')) % posterStock.length];
+    return pick;
   },
 };
 
