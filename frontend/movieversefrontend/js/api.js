@@ -4,7 +4,7 @@
    ================================================ */
 
 const CONFIG = {
-  GATEWAY_URL: 'http://localhost:8080',
+  GATEWAY_URL: 'https://api-gateway-ql0f.onrender.com',
   AUTH_SERVICE:    '/api/auth',
   MOVIE_SERVICE:   '/api/movies',
   THEATER_SERVICE: '/api/theaters',
